@@ -1,7 +1,6 @@
 import { IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
-import { CodeIsUnique } from '../validation/code-is-unique.validator.js';
 
-export class CreateStockDto {
+export class CreateStockRequestDTO {
   @IsNotEmpty({ message: 'Name is required' })
   name: string;
 
@@ -13,6 +12,5 @@ export class CreateStockDto {
   quantity: number;
 
   @IsNumber(undefined, { message: 'Code must be a number' })
-  @CodeIsUnique({ message: 'Code must be unique' })
   code: number;
 }
