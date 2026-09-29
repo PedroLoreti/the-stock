@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +8,77 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum StockMovementType {
+  ENTRY
+  SALE
+  SALE_CANCELLATION
+}
+
+enum SaleStatus {
+  COMPLETED
+  CANCELLED
+}
+
+model Product {
+  id          String   @id @db.Uuid
+  name        String
+  description String
+  sku         String   @unique
+  price       Decimal  @db.Decimal(10, 2)
+  quantity    Int
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  movements StockMovement[]
+  saleItems SaleItem[]
+
+  @@map("products")
+}
+
+model StockMovement {
+  id        String            @id @db.Uuid
+  productId String            @map("product_id") @db.Uuid
+  type      StockMovementType
+  quantity  Int
+  saleId    String?           @map("sale_id") @db.Uuid
+  createdAt DateTime          @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id])
+  sale    Sale?   @relation(fields: [saleId], references: [id])
+
+  @@index([productId])
+  @@index([saleId])
+  @@map("stock_movements")
+}
+
+model Sale {
+  id          String     @id @db.Uuid
+  status      SaleStatus @default(COMPLETED)
+  total       Decimal    @db.Decimal(10, 2)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  cancelledAt DateTime?  @map("cancelled_at")
+
+  items     SaleItem[]
+  movements StockMovement[]
+
+  @@map("sales")
+}
+
+model SaleItem {
+  id        String  @id @db.Uuid
+  saleId    String  @map("sale_id") @db.Uuid
+  productId String  @map("product_id") @db.Uuid
+  quantity  Int
+  unitPrice Decimal @map("unit_price") @db.Decimal(10, 2)
+  subtotal  Decimal @db.Decimal(10, 2)
+
+  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([saleId])
+  @@index([productId])
+  @@map("sale_items")
 }
