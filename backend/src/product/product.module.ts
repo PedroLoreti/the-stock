@@ -10,8 +10,10 @@ import { ProductRepository } from './domain/repositories/product.repository.js';
 import { StockMovementRepository } from './domain/repositories/stock-movement.repository.js';
 import { PrismaProductRepository } from './infrastructure/persistence/prisma-product.repository.js';
 import { PrismaStockMovementRepository } from './infrastructure/persistence/prisma-stock-movement.repository.js';
+import { ProductController } from './presentation/controllers/product.controller.js';
 
 @Module({
+    controllers: [ProductController],
     providers: [
         { provide: ProductRepository, useClass: PrismaProductRepository },
         { provide: StockMovementRepository, useClass: PrismaStockMovementRepository },
