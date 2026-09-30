@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
+import { ConcurrencyError } from '../../domain/concurrency.error.js';
 import { DomainError } from '../../domain/domain.error.js';
 import { InsufficientStockError } from '../../../product/domain/errors/insufficient-stock.error.js';
 import { ProductInactiveError } from '../../../product/domain/errors/product-inactive.error.js';
@@ -17,6 +18,7 @@ const STATUS_BY_ERROR: ReadonlyArray<[abstract new (...args: never[]) => DomainE
     [ProductNotFoundError, HttpStatus.NOT_FOUND],
     [SaleNotFoundError, HttpStatus.NOT_FOUND],
     [SkuAlreadyExistsError, HttpStatus.CONFLICT],
+    [ConcurrencyError, HttpStatus.CONFLICT],
     [InsufficientStockError, HttpStatus.UNPROCESSABLE_ENTITY],
     [ProductInactiveError, HttpStatus.UNPROCESSABLE_ENTITY],
     [SaleAlreadyCancelledError, HttpStatus.UNPROCESSABLE_ENTITY],

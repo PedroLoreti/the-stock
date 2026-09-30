@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConcurrencyError } from '../../../shared/domain/concurrency.error.js';
 import { PrismaService } from '../../../shared/infrastructure/prisma/prisma.service.js';
 import { Product } from '../../domain/entities/product.entity.js';
 import { ProductRepository } from '../../domain/repositories/product.repository.js';
@@ -8,13 +9,27 @@ import { ProductMapper } from './product.mapper.js';
 export class PrismaProductRepository implements ProductRepository {
     constructor(private readonly prisma: PrismaService) {}
 
+    /**
+     * Lock otimista: o UPDATE só acontece se a linha ainda estiver na versão que foi lida.
+     * Se outra operação gravou antes, nenhuma linha é afetada e lançamos ConcurrencyError.
+     */
     async save(product: Product): Promise<void> {
-        const { id, ...data } = ProductMapper.toPersistence(product);
-        await this.prisma.db.product.upsert({
-            where: { id },
-            create: { id, ...data },
-            update: data,
+        const { id, version, ...data } = ProductMapper.toPersistence(product);
+
+        const updated = await this.prisma.db.product.updateMany({
+            where: { id, version },
+            data: { ...data, version: { increment: 1 } },
         });
+        if (updated.count === 1) {
+            return;
+        }
+
+        const exists = await this.prisma.db.product.findUnique({ where: { id }, select: { id: true } });
+        if (exists) {
+            throw new ConcurrencyError();
+        }
+
+        await this.prisma.db.product.create({ data: { id, version, ...data } });
     }
 
     async findById(id: string): Promise<Product | null> {

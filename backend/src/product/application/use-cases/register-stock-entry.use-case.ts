@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { retryOnConcurrency } from '../../../shared/application/retry-on-concurrency.js';
 import { UnitOfWork } from '../../../shared/application/unit-of-work.js';
 import { Product } from '../../domain/entities/product.entity.js';
 import { StockMovement } from '../../domain/entities/stock-movement.entity.js';
@@ -19,7 +20,11 @@ export class RegisterStockEntryUseCase {
         private readonly unitOfWork: UnitOfWork,
     ) {}
 
-    async execute(input: RegisterStockEntryInput): Promise<Product> {
+    execute(input: RegisterStockEntryInput): Promise<Product> {
+        return retryOnConcurrency(() => this.attempt(input));
+    }
+
+    private async attempt(input: RegisterStockEntryInput): Promise<Product> {
         const product = await this.productRepository.findById(input.productId);
         if (!product) {
             throw new ProductNotFoundError();

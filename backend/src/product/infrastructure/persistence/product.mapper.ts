@@ -11,6 +11,7 @@ export class ProductMapper {
             price: row.price.toNumber(),
             quantity: row.quantity,
             active: row.active,
+            version: row.version,
         });
     }
 
@@ -23,6 +24,7 @@ export class ProductMapper {
             price: product.price,
             quantity: product.quantity,
             active: product.active,
+            version: product.version,
         };
     }
 }

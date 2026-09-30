@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { retryOnConcurrency } from '../../../shared/application/retry-on-concurrency.js';
 import { UnitOfWork } from '../../../shared/application/unit-of-work.js';
 import { StockMovement } from '../../../product/domain/entities/stock-movement.entity.js';
 import { ProductNotFoundError } from '../../../product/domain/errors/product-not-found.error.js';
@@ -33,6 +34,11 @@ export class CreateSaleUseCase {
             throw new InvalidSaleError('The same product cannot appear twice in a sale');
         }
 
+        // Se outra venda gravou o mesmo produto no meio do caminho, relê tudo e tenta de novo.
+        return retryOnConcurrency(() => this.attempt(input, productIds));
+    }
+
+    private async attempt(input: CreateSaleInput, productIds: string[]): Promise<Sale> {
         const products = await this.productRepository.findManyByIds(productIds);
         const productsById = new Map(products.map((product) => [product.id, product]));
 

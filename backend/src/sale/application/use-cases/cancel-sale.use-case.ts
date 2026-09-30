@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { retryOnConcurrency } from '../../../shared/application/retry-on-concurrency.js';
 import { UnitOfWork } from '../../../shared/application/unit-of-work.js';
 import { StockMovement } from '../../../product/domain/entities/stock-movement.entity.js';
 import { ProductNotFoundError } from '../../../product/domain/errors/product-not-found.error.js';
@@ -21,7 +22,11 @@ export class CancelSaleUseCase {
         private readonly unitOfWork: UnitOfWork,
     ) {}
 
-    async execute(input: CancelSaleInput): Promise<Sale> {
+    execute(input: CancelSaleInput): Promise<Sale> {
+        return retryOnConcurrency(() => this.attempt(input));
+    }
+
+    private async attempt(input: CancelSaleInput): Promise<Sale> {
         const sale = await this.saleRepository.findById(input.id);
         if (!sale) {
             throw new SaleNotFoundError();

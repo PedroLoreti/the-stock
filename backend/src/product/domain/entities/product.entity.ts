@@ -11,9 +11,11 @@ export interface ProductProps {
     price: number;
     quantity: number;
     active: boolean;
+    /** Contador de gravações, usado pelo lock otimista no repositório. */
+    version: number;
 }
 
-export type CreateProductProps = Omit<ProductProps, 'id' | 'active'>;
+export type CreateProductProps = Omit<ProductProps, 'id' | 'active' | 'version'>;
 export type UpdateProductProps = Partial<Pick<ProductProps, 'name' | 'description' | 'price'>>;
 
 const SKU_PATTERN = /^TS-\d+$/;
@@ -34,6 +36,7 @@ export class Product {
             ...data,
             sku: data.sku.trim(),
             active: true,
+            version: 0,
         });
     }
 
@@ -94,6 +97,9 @@ export class Product {
     }
     get active() {
         return this.props.active;
+    }
+    get version() {
+        return this.props.version;
     }
 
     private ensureActive(): void {
