@@ -5,10 +5,11 @@ import { SaleAlreadyCancelledError } from '../errors/sale-already-cancelled.erro
 import { SaleCancellationWindowExpiredError } from '../errors/sale-cancellation-window-expired.error.js';
 import { SaleItem } from './sale-item.entity.js';
 
-export enum SaleStatus {
-    COMPLETED = 'COMPLETED',
-    CANCELLED = 'CANCELLED',
-}
+export const SaleStatus = {
+    COMPLETED: 'COMPLETED',
+    CANCELLED: 'CANCELLED',
+} as const;
+export type SaleStatus = (typeof SaleStatus)[keyof typeof SaleStatus];
 
 export interface SaleProps {
     id: string;

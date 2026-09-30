@@ -1,11 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { InvalidProductError } from '../errors/invalid-product.error.js';
 
-export enum StockMovementType {
-    ENTRY = 'ENTRY',
-    SALE = 'SALE',
-    SALE_CANCELLATION = 'SALE_CANCELLATION',
-}
+export const StockMovementType = {
+    ENTRY: 'ENTRY',
+    SALE: 'SALE',
+    SALE_CANCELLATION: 'SALE_CANCELLATION',
+} as const;
+export type StockMovementType = (typeof StockMovementType)[keyof typeof StockMovementType];
 
 export interface StockMovementProps {
     id: string;
