@@ -77,6 +77,10 @@ export class Product {
         this.props.active = false;
     }
 
+    activate(): void {
+        this.props.active = true;
+    }
+
     get id() {
         return this.props.id;
     }
