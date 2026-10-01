@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { AppShell } from "@/components/layout/app-shell";
 import { PageSpinner } from "@/components/page-spinner";
 import { useSession } from "@/lib/auth/session-provider";
 
@@ -22,5 +23,5 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return <PageSpinner />;
   }
 
-  return <>{children}</>;
+  return <AppShell>{children}</AppShell>;
 }
