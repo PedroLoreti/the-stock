@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  HomeIcon,
+  LayoutDashboardIcon,
   KeyRoundIcon,
   LogOutIcon,
   PackageIcon,
@@ -37,7 +37,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "Home", icon: HomeIcon },
+  { href: "/", label: "Dashboard", icon: LayoutDashboardIcon },
   { href: "/products", label: "Products", icon: PackageIcon },
   { href: "/sales/new", label: "New sale", icon: ShoppingCartIcon },
   { href: "/sales", label: "Sales", icon: ReceiptTextIcon },
