@@ -8,6 +8,9 @@ export class ProductResponseDto {
         readonly sku: string,
         readonly price: number,
         readonly quantity: number,
+        readonly minStock: number,
+        /** Regra do domínio: esgotado ou no limite mínimo. */
+        readonly lowStock: boolean,
         readonly active: boolean,
     ) {}
 
@@ -19,6 +22,8 @@ export class ProductResponseDto {
             product.sku,
             product.price,
             product.quantity,
+            product.minStock,
+            product.isLowStock,
             product.active,
         );
     }

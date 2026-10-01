@@ -1,17 +1,24 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { productsApi, type CreateProductInput, type UpdateProductInput } from "./api";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  productsApi,
+  type CreateProductInput,
+  type ListProductsParams,
+  type UpdateProductInput,
+} from "./api";
 
 export const productKeys = {
   all: ["products"] as const,
-  list: (includeInactive: boolean) => [...productKeys.all, "list", { includeInactive }] as const,
+  list: (params: ListProductsParams) => [...productKeys.all, "list", params] as const,
   detail: (id: string) => [...productKeys.all, "detail", id] as const,
   movements: (id: string) => [...productKeys.all, "movements", id] as const,
 };
 
-export function useProducts(includeInactive = false) {
+export function useProducts(params: ListProductsParams = {}) {
   return useQuery({
-    queryKey: productKeys.list(includeInactive),
-    queryFn: () => productsApi.list(includeInactive),
+    queryKey: productKeys.list(params),
+    queryFn: () => productsApi.list(params),
+    // Keep the current page on screen while the next one (or a new search) loads.
+    placeholderData: keepPreviousData,
   });
 }
 

@@ -10,6 +10,7 @@ export class ProductMapper {
             sku: row.sku,
             price: row.price.toNumber(),
             quantity: row.quantity,
+            minStock: row.minStock,
             active: row.active,
             version: row.version,
         });
@@ -23,6 +24,7 @@ export class ProductMapper {
             sku: product.sku,
             price: product.price,
             quantity: product.quantity,
+            minStock: product.minStock,
             active: product.active,
             version: product.version,
         };

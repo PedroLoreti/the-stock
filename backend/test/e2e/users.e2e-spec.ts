@@ -103,10 +103,22 @@ describe('users (e2e)', () => {
             await api(app).delete(`/users/${created.body.id}`).set(bearer(admin)).expect(200);
 
             const active = await api(app).get('/users').set(bearer(admin)).expect(200);
-            expect(active.body.map((u: { id: string }) => u.id)).not.toContain(created.body.id);
+            expect(active.body.data.map((u: { id: string }) => u.id)).not.toContain(created.body.id);
 
             const all = await api(app).get('/users?includeInactive=true').set(bearer(admin)).expect(200);
-            expect(all.body.map((u: { id: string }) => u.id)).toContain(created.body.id);
+            expect(all.body.data.map((u: { id: string }) => u.id)).toContain(created.body.id);
+            expect(all.body.meta).toMatchObject({ page: 1, total: expect.any(Number) });
+
+            const searched = await api(app).get('/users?search=listed').set(bearer(admin)).expect(200);
+            expect(searched.body.data).toHaveLength(0);
+            const searchedAll = await api(app)
+                .get('/users?search=listed&includeInactive=true')
+                .set(bearer(admin))
+                .expect(200);
+            expect(searchedAll.body.data.map((u: { id: string }) => u.id)).toEqual([created.body.id]);
+
+            await api(app).get('/users?page=0').set(bearer(admin)).expect(400);
+            await api(app).get('/users?pageSize=101').set(bearer(admin)).expect(400);
         });
 
         it('returns 404 for an unknown id', async () => {

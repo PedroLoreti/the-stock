@@ -1,5 +1,6 @@
 import { User, UserProps } from '../../src/user/domain/entities/user.entity.js';
-import { UserRepository } from '../../src/user/domain/repositories/user.repository.js';
+import { Page, paginateArray } from '../../src/shared/application/pagination.js';
+import { FindAllUsersOptions, UserRepository } from '../../src/user/domain/repositories/user.repository.js';
 import { Snapshotable } from './snapshotable.js';
 
 function toProps(user: User): UserProps {
@@ -37,10 +38,20 @@ export class InMemoryUserRepository implements UserRepository, Snapshotable {
         return row ? User.restore({ ...row }) : null;
     }
 
-    async findAll(options: { includeInactive?: boolean } = {}): Promise<User[]> {
-        return [...this.rows.values()]
+    async findAll(options: FindAllUsersOptions): Promise<Page<User>> {
+        const search = options.search?.trim().toLowerCase();
+        const matching = [...this.rows.values()]
             .filter((row) => options.includeInactive || row.active)
+            .filter(
+                (row) =>
+                    !search ||
+                    row.name.toLowerCase().includes(search) ||
+                    row.username.includes(search) ||
+                    row.email.includes(search),
+            )
+            .sort((a, b) => a.name.localeCompare(b.name))
             .map((row) => User.restore({ ...row }));
+        return paginateArray(matching, options);
     }
 
     async count(): Promise<number> {

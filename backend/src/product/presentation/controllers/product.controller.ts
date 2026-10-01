@@ -1,13 +1,11 @@
 import {
     Body,
     Controller,
-    DefaultValuePipe,
     Delete,
     Get,
     HttpCode,
     HttpStatus,
     Param,
-    ParseBoolPipe,
     ParseUUIDPipe,
     Patch,
     Post,
@@ -15,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../../../auth/presentation/decorators/current-user.decorator.js';
 import { Roles } from '../../../auth/presentation/decorators/roles.decorator.js';
+import { PageResponseDto } from '../../../shared/presentation/dtos/page.response.dto.js';
 import { UserRole } from '../../../user/domain/entities/user.entity.js';
 import { CreateProductUseCase } from '../../application/use-cases/create-product.use-case.js';
 import { DeactivateProductUseCase } from '../../application/use-cases/deactivate-product.use-case.js';
@@ -25,6 +24,7 @@ import { RegisterStockEntryUseCase } from '../../application/use-cases/register-
 import { RestoreProductUseCase } from '../../application/use-cases/restore-product.use-case.js';
 import { UpdateProductUseCase } from '../../application/use-cases/update-product.use-case.js';
 import { CreateProductRequestDto } from '../dtos/create-product.request.dto.js';
+import { ListProductsQueryDto } from '../dtos/list-products.query.dto.js';
 import { ProductResponseDto } from '../dtos/product.response.dto.js';
 import { RegisterStockEntryRequestDto } from '../dtos/register-stock-entry.request.dto.js';
 import { StockMovementResponseDto } from '../dtos/stock-movement.response.dto.js';
@@ -56,11 +56,11 @@ export class ProductController {
 
     @Get()
     async list(
-        @Query('includeInactive', new DefaultValuePipe(false), ParseBoolPipe) includeInactive: boolean,
+        @Query() query: ListProductsQueryDto,
         @CurrentUser() user: CurrentUser,
-    ): Promise<ProductResponseDto[]> {
-        const products = await this.listProducts.execute({ includeInactive, requesterRole: user.role });
-        return products.map(ProductResponseDto.fromEntity);
+    ): Promise<PageResponseDto<ProductResponseDto>> {
+        const page = await this.listProducts.execute({ ...query, requesterRole: user.role });
+        return PageResponseDto.from(page, ProductResponseDto.fromEntity);
     }
 
     @Get(':id')

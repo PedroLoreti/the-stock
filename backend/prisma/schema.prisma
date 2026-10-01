@@ -66,6 +66,7 @@ model Product {
   sku         String   @unique
   price       Decimal  @db.Decimal(10, 2)
   quantity    Int
+  minStock    Int      @default(0) @map("min_stock")
   active      Boolean  @default(true)
   version     Int      @default(0)
   createdAt   DateTime @default(now()) @map("created_at")

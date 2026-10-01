@@ -45,7 +45,29 @@ describe('Product read/update use cases', () => {
             await products.save(makeProduct());
             await products.save(inactive);
 
-            expect(await new ListProductsUseCase(products).execute()).toHaveLength(1);
+            expect((await new ListProductsUseCase(products).execute()).items).toHaveLength(1);
+        });
+
+        it('paginates and reports the total, sorted by name', async () => {
+            for (const name of ['Caderno', 'Apontador', 'Borracha']) {
+                await products.save(makeProduct({ name }));
+            }
+
+            const first = await new ListProductsUseCase(products).execute({ page: 1, pageSize: 2 });
+            const second = await new ListProductsUseCase(products).execute({ page: 2, pageSize: 2 });
+
+            expect(first.items.map((p) => p.name)).toEqual(['Apontador', 'Borracha']);
+            expect(first).toMatchObject({ page: 1, pageSize: 2, total: 3 });
+            expect(second.items.map((p) => p.name)).toEqual(['Caderno']);
+        });
+
+        it('filters by name or sku, ignoring case', async () => {
+            await products.save(makeProduct({ name: 'Caneta Azul', sku: 'TS-100' }));
+            await products.save(makeProduct({ name: 'Lápis', sku: 'TS-200' }));
+
+            expect((await new ListProductsUseCase(products).execute({ search: 'caneta' })).items).toHaveLength(1);
+            expect((await new ListProductsUseCase(products).execute({ search: 'ts-200' })).items).toHaveLength(1);
+            expect((await new ListProductsUseCase(products).execute({ search: 'xyz' })).total).toBe(0);
         });
 
         it('lets administrators include inactive products', async () => {
@@ -59,7 +81,7 @@ describe('Product read/update use cases', () => {
                 requesterRole: UserRole.ADMIN,
             });
 
-            expect(result).toHaveLength(2);
+            expect(result.items).toHaveLength(2);
         });
 
         it.each([UserRole.MANAGEMENT, UserRole.SELLER, undefined])(

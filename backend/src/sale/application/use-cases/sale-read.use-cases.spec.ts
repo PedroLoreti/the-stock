@@ -33,6 +33,18 @@ describe('Sale read use cases', () => {
 
         const result = await new ListSalesUseCase(sales).execute();
 
-        expect(result.map((sale) => sale.id)).toEqual([newer.id, older.id]);
+        expect(result.items.map((sale) => sale.id)).toEqual([newer.id, older.id]);
+        expect(result).toMatchObject({ page: 1, total: 2 });
+    });
+
+    it('ListSalesUseCase paginates', async () => {
+        for (let day = 1; day <= 3; day++) {
+            await sales.save(makeSale({ createdAt: new Date(`2026-09-0${day}T00:00:00Z`) }));
+        }
+
+        const page = await new ListSalesUseCase(sales).execute({ page: 2, pageSize: 2 });
+
+        expect(page.items).toHaveLength(1);
+        expect(page).toMatchObject({ page: 2, pageSize: 2, total: 3 });
     });
 });

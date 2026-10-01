@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import type { Prisma } from '../../../generated/prisma/client.js';
+import { Page, skipOf } from '../../../shared/application/pagination.js';
 import { ConcurrencyError } from '../../../shared/domain/concurrency.error.js';
 import { PrismaService } from '../../../shared/infrastructure/prisma/prisma.service.js';
 import { Product } from '../../domain/entities/product.entity.js';
@@ -47,11 +49,30 @@ export class PrismaProductRepository implements ProductRepository {
         return rows.map(ProductMapper.toDomain);
     }
 
-    async findAll(options: FindAllProductsOptions = {}): Promise<Product[]> {
-        const rows = await this.prisma.db.product.findMany({
-            where: options.includeInactive ? undefined : { active: true },
-            orderBy: { name: 'asc' },
-        });
-        return rows.map(ProductMapper.toDomain);
+    async findAll(options: FindAllProductsOptions): Promise<Page<Product>> {
+        const search = options.search?.trim();
+        const where: Prisma.ProductWhereInput = {
+            ...(options.includeInactive ? {} : { active: true }),
+            ...(search
+                ? {
+                      OR: [
+                          { name: { contains: search, mode: 'insensitive' } },
+                          { sku: { contains: search, mode: 'insensitive' } },
+                      ],
+                  }
+                : {}),
+        };
+
+        const [rows, total] = await Promise.all([
+            this.prisma.db.product.findMany({
+                where,
+                orderBy: { name: 'asc' },
+                skip: skipOf(options),
+                take: options.pageSize,
+            }),
+            this.prisma.db.product.count({ where }),
+        ]);
+
+        return { items: rows.map(ProductMapper.toDomain), page: options.page, pageSize: options.pageSize, total };
     }
 }

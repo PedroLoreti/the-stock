@@ -10,13 +10,15 @@ export interface ProductProps {
     sku: string;
     price: number;
     quantity: number;
+    /** Abaixo ou igual a este saldo o produto é considerado em estoque baixo. Zero desliga o aviso (só avisa quando esgotar). */
+    minStock: number;
     active: boolean;
     /** Contador de gravações, usado pelo lock otimista no repositório. */
     version: number;
 }
 
-export type CreateProductProps = Omit<ProductProps, 'id' | 'active' | 'version'>;
-export type UpdateProductProps = Partial<Pick<ProductProps, 'name' | 'description' | 'price'>>;
+export type CreateProductProps = Omit<ProductProps, 'id' | 'active' | 'version' | 'minStock'> & { minStock?: number };
+export type UpdateProductProps = Partial<Pick<ProductProps, 'name' | 'description' | 'price' | 'minStock'>>;
 
 const SKU_PATTERN = /^TS-\d+$/;
 
@@ -30,11 +32,14 @@ export class Product {
         if (data.quantity < 0) {
             throw new InvalidProductError('Quantity cannot be negative');
         }
+        const minStock = data.minStock ?? 0;
+        Product.validateMinStock(minStock);
 
         return new Product({
             id: randomUUID(),
             ...data,
             sku: data.sku.trim(),
+            minStock,
             active: true,
             version: 0,
         });
@@ -55,6 +60,10 @@ export class Product {
         if (data.price !== undefined) {
             Product.validatePrice(data.price);
             this.props.price = data.price;
+        }
+        if (data.minStock !== undefined) {
+            Product.validateMinStock(data.minStock);
+            this.props.minStock = data.minStock;
         }
     }
 
@@ -99,6 +108,13 @@ export class Product {
     get quantity() {
         return this.props.quantity;
     }
+    get minStock() {
+        return this.props.minStock;
+    }
+    /** Esgotado ou no limite mínimo configurado. */
+    get isLowStock() {
+        return this.props.quantity <= this.props.minStock;
+    }
     get active() {
         return this.props.active;
     }
@@ -127,6 +143,12 @@ export class Product {
     private static validatePrice(price: number): void {
         if (price <= 0) {
             throw new InvalidProductError('Price must be greater than zero');
+        }
+    }
+
+    private static validateMinStock(minStock: number): void {
+        if (!Number.isInteger(minStock) || minStock < 0) {
+            throw new InvalidProductError('Minimum stock must be a non-negative integer');
         }
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MinusIcon, PlusIcon, SearchIcon, ShoppingCartIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { StockBadge } from "@/features/products/components/product-badges";
 import { useProducts } from "@/features/products/queries";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Product } from "@/lib/api/types";
 import { formatCurrency } from "@/lib/format";
 import { useCreateSale } from "../queries";
@@ -21,22 +22,22 @@ interface CartLine {
   quantity: number;
 }
 
+/** How many matches the picker shows; the seller narrows the search for more. */
+const PICKER_PAGE_SIZE = 20;
+
 export function NewSaleForm() {
   const router = useRouter();
-  const products = useProducts();
   const createSale = useCreateSale();
 
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
 
-  const available = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return (products.data ?? []).filter(
-      (product) =>
-        product.quantity > 0 &&
-        (!term || product.name.toLowerCase().includes(term) || product.sku.toLowerCase().includes(term)),
-    );
-  }, [products.data, search]);
+  const debouncedSearch = useDebouncedValue(search.trim());
+  const products = useProducts({ page: 1, pageSize: PICKER_PAGE_SIZE, search: debouncedSearch || undefined });
+
+  // Out-of-stock products cannot be sold, so they are left out of the picker.
+  const available = (products.data?.data ?? []).filter((product) => product.quantity > 0);
+  const hiddenMatches = products.data ? products.data.meta.total - products.data.data.length : 0;
 
   const total = cart.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
 
@@ -99,38 +100,45 @@ export function NewSaleForm() {
           <QueryError error={products.error} onRetry={() => products.refetch()} />
         ) : available.length === 0 ? (
           <EmptyState
-            title={search ? "No products match your search" : "No products available"}
-            description={search ? undefined : "Products need stock before they can be sold."}
+            title={debouncedSearch ? "No products match your search" : "No products available"}
+            description={debouncedSearch ? undefined : "Products need stock before they can be sold."}
           />
         ) : (
-          <ul className="divide-y overflow-hidden rounded-xl border">
-            {available.map((product) => {
-              const inCart = cart.find((line) => line.product.id === product.id)?.quantity ?? 0;
-              return (
-                <li key={product.id} className="flex items-center gap-3 p-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium">{product.name}</span>
-                      <span className="font-mono text-xs text-muted-foreground">{product.sku}</span>
-                      <StockBadge product={product} />
+          <>
+            <ul className="divide-y overflow-hidden rounded-xl border">
+              {available.map((product) => {
+                const inCart = cart.find((line) => line.product.id === product.id)?.quantity ?? 0;
+                return (
+                  <li key={product.id} className="flex items-center gap-3 p-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">{product.name}</span>
+                        <span className="font-mono text-xs text-muted-foreground">{product.sku}</span>
+                        <StockBadge product={product} />
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatCurrency(product.price)} · {product.quantity} in stock
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {formatCurrency(product.price)} · {product.quantity} in stock
-                    </div>
-                  </div>
-                  <Button
-                    variant={inCart ? "secondary" : "outline"}
-                    size="sm"
-                    onClick={() => addToCart(product)}
-                    disabled={inCart >= product.quantity}
-                  >
-                    <PlusIcon data-icon="inline-start" />
-                    {inCart ? `Add (${inCart})` : "Add"}
-                  </Button>
-                </li>
-              );
-            })}
-          </ul>
+                    <Button
+                      variant={inCart ? "secondary" : "outline"}
+                      size="sm"
+                      onClick={() => addToCart(product)}
+                      disabled={inCart >= product.quantity}
+                    >
+                      <PlusIcon data-icon="inline-start" />
+                      {inCart ? `Add (${inCart})` : "Add"}
+                    </Button>
+                  </li>
+                );
+              })}
+            </ul>
+            {hiddenMatches > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Showing the first {PICKER_PAGE_SIZE} matches. Refine the search to find the other {hiddenMatches}.
+              </p>
+            ) : null}
+          </>
         )}
       </section>
 

@@ -1,5 +1,11 @@
 import { api } from "@/lib/api/client";
-import type { User, UserRole } from "@/lib/api/types";
+import type { Page, PageParams, User, UserRole } from "@/lib/api/types";
+
+export interface ListUsersParams extends PageParams {
+  /** Matches name, username or email, case-insensitive. */
+  search?: string;
+  includeInactive?: boolean;
+}
 
 export interface CreateUserInput {
   name: string;
@@ -17,9 +23,14 @@ export interface UpdateUserInput {
 }
 
 export const usersApi = {
-  async list(includeInactive = false): Promise<User[]> {
-    const { data } = await api.get<User[]>("/users", {
-      params: includeInactive ? { includeInactive: true } : undefined,
+  async list(params: ListUsersParams = {}): Promise<Page<User>> {
+    const { data } = await api.get<Page<User>>("/users", {
+      params: {
+        page: params.page,
+        pageSize: params.pageSize,
+        search: params.search?.trim() || undefined,
+        includeInactive: params.includeInactive ? true : undefined,
+      },
     });
     return data;
   },

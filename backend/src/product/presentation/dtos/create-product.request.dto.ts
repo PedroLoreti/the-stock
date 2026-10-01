@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsNumber, IsPositive, IsString, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Min } from 'class-validator';
 
 export class CreateProductRequestDto {
     @IsString()
@@ -19,4 +19,10 @@ export class CreateProductRequestDto {
     @IsInt({ message: 'Quantity must be an integer' })
     @Min(0, { message: 'Quantity cannot be negative' })
     quantity: number;
+
+    /** Limite para o aviso de estoque baixo. Zero (padrão) só avisa quando esgotar. */
+    @IsOptional()
+    @IsInt({ message: 'Minimum stock must be an integer' })
+    @Min(0, { message: 'Minimum stock cannot be negative' })
+    minStock?: number;
 }

@@ -1,13 +1,11 @@
 import {
     Body,
     Controller,
-    DefaultValuePipe,
     Delete,
     Get,
     HttpCode,
     HttpStatus,
     Param,
-    ParseBoolPipe,
     ParseUUIDPipe,
     Patch,
     Post,
@@ -15,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../../../auth/presentation/decorators/current-user.decorator.js';
 import { Roles } from '../../../auth/presentation/decorators/roles.decorator.js';
+import { PageResponseDto } from '../../../shared/presentation/dtos/page.response.dto.js';
 import { CreateUserUseCase } from '../../application/use-cases/create-user.use-case.js';
 import { DeactivateUserUseCase } from '../../application/use-cases/deactivate-user.use-case.js';
 import { GetUserUseCase } from '../../application/use-cases/get-user.use-case.js';
@@ -24,6 +23,7 @@ import { RestoreUserUseCase } from '../../application/use-cases/restore-user.use
 import { UpdateUserUseCase } from '../../application/use-cases/update-user.use-case.js';
 import { UserRole } from '../../domain/entities/user.entity.js';
 import { CreateUserRequestDto } from '../dtos/create-user.request.dto.js';
+import { ListUsersQueryDto } from '../dtos/list-users.query.dto.js';
 import { ResetPasswordRequestDto } from '../dtos/reset-password.request.dto.js';
 import { UpdateUserRequestDto } from '../dtos/update-user.request.dto.js';
 import { UserResponseDto } from '../dtos/user.response.dto.js';
@@ -49,11 +49,9 @@ export class UserController {
     }
 
     @Get()
-    async list(
-        @Query('includeInactive', new DefaultValuePipe(false), ParseBoolPipe) includeInactive: boolean,
-    ): Promise<UserResponseDto[]> {
-        const users = await this.listUsers.execute({ includeInactive });
-        return users.map(UserResponseDto.fromEntity);
+    async list(@Query() query: ListUsersQueryDto): Promise<PageResponseDto<UserResponseDto>> {
+        const page = await this.listUsers.execute(query);
+        return PageResponseDto.from(page, UserResponseDto.fromEntity);
     }
 
     @Get(':id')

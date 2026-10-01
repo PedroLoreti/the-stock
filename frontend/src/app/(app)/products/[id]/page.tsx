@@ -78,6 +78,9 @@ export default function ProductDetailPage({ params }: PageProps<"/products/[id]"
           <CardHeader>
             <CardDescription>In stock</CardDescription>
             <CardTitle className="text-2xl tabular-nums">{data.quantity}</CardTitle>
+            <CardDescription>
+              {data.minStock > 0 ? `Alert at ${data.minStock} or less` : "Alert only when out of stock"}
+            </CardDescription>
           </CardHeader>
         </Card>
         <Card className="sm:col-span-1">

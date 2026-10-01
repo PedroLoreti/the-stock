@@ -8,6 +8,7 @@ export interface UpdateProductInput {
     name?: string;
     description?: string;
     price?: number;
+    minStock?: number;
 }
 
 @Injectable()

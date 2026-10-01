@@ -16,6 +16,24 @@ export interface AuthResponse {
   user: User;
 }
 
+/** Envelope returned by every paginated list endpoint. */
+export interface PageMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface Page<T> {
+  data: T[];
+  meta: PageMeta;
+}
+
+export interface PageParams {
+  page?: number;
+  pageSize?: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -23,6 +41,10 @@ export interface Product {
   sku: string;
   price: number;
   quantity: number;
+  /** Alert threshold; zero means the alert only fires when the product runs out. */
+  minStock: number;
+  /** Computed by the API: quantity <= minStock. */
+  lowStock: boolean;
   active: boolean;
 }
 

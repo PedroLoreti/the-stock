@@ -107,8 +107,19 @@ describe('User management use cases', () => {
             await users.save(makeUser());
             await users.save(inactive);
 
-            expect(await new ListUsersUseCase(users).execute()).toHaveLength(1);
-            expect(await new ListUsersUseCase(users).execute({ includeInactive: true })).toHaveLength(2);
+            expect((await new ListUsersUseCase(users).execute()).items).toHaveLength(1);
+            expect((await new ListUsersUseCase(users).execute({ includeInactive: true })).items).toHaveLength(2);
+        });
+
+        it('searches by name, username or email and paginates', async () => {
+            await users.save(makeUser({ name: 'Ana Souza', username: 'ana', email: 'ana@thestock.local' }));
+            await users.save(makeUser({ name: 'Bruno Lima', username: 'bruno', email: 'bruno@thestock.local' }));
+
+            expect((await new ListUsersUseCase(users).execute({ search: 'souza' })).items).toHaveLength(1);
+            expect((await new ListUsersUseCase(users).execute({ search: 'bruno@' })).items).toHaveLength(1);
+            const page = await new ListUsersUseCase(users).execute({ page: 2, pageSize: 1 });
+            expect(page.items.map((u) => u.name)).toEqual(['Bruno Lima']);
+            expect(page.total).toBe(2);
         });
     });
 

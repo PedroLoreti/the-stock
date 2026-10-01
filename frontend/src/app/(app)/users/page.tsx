@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PlusIcon, SearchIcon } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
+import { Pagination } from "@/components/layout/pagination";
 import { EmptyState, ListSkeleton, QueryError } from "@/components/layout/query-state";
 import { PageSpinner } from "@/components/page-spinner";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { ResetPasswordDialog } from "@/features/users/components/reset-password-
 import { UserFormDialog } from "@/features/users/components/user-form-dialog";
 import { UsersTable } from "@/features/users/components/users-table";
 import { useUsers } from "@/features/users/queries";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { User } from "@/lib/api/types";
 import { permissions } from "@/lib/auth/roles";
 import { useSession } from "@/lib/auth/session-provider";
@@ -29,22 +31,21 @@ export default function UsersPage() {
 
   const [includeInactive, setIncludeInactive] = useState(false);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [formState, setFormState] = useState<{ open: boolean; user?: User }>({ open: false });
   const [resetUser, setResetUser] = useState<User | null>(null);
 
-  const users = useUsers(includeInactive);
+  const debouncedSearch = useDebouncedValue(search.trim());
+  const users = useUsers({ page, search: debouncedSearch || undefined, includeInactive });
 
-  const filtered = useMemo(() => {
-    const list = users.data ?? [];
-    const term = search.trim().toLowerCase();
-    if (!term) return list;
-    return list.filter(
-      (user) =>
-        user.name.toLowerCase().includes(term) ||
-        user.username.includes(term) ||
-        user.email.includes(term),
-    );
-  }, [users.data, search]);
+  const updateSearch = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
+  const updateIncludeInactive = (value: boolean) => {
+    setIncludeInactive(value);
+    setPage(1);
+  };
 
   if (!isAdmin) return <PageSpinner />;
 
@@ -69,7 +70,7 @@ export default function UsersPage() {
             placeholder="Search by name, username or email"
             className="pl-8"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => updateSearch(event.target.value)}
             aria-label="Search users"
           />
         </div>
@@ -78,7 +79,7 @@ export default function UsersPage() {
             type="checkbox"
             className="size-4 accent-primary"
             checked={includeInactive}
-            onChange={(event) => setIncludeInactive(event.target.checked)}
+            onChange={(event) => updateIncludeInactive(event.target.checked)}
           />
           Show inactive users
         </Label>
@@ -88,18 +89,21 @@ export default function UsersPage() {
         <ListSkeleton />
       ) : users.isError ? (
         <QueryError error={users.error} onRetry={() => users.refetch()} />
-      ) : filtered.length === 0 ? (
+      ) : users.data.data.length === 0 ? (
         <EmptyState
-          title={search ? "No users match your search" : "No users found"}
-          description={search ? "Try a different name, username or email." : undefined}
+          title={debouncedSearch ? "No users match your search" : "No users found"}
+          description={debouncedSearch ? "Try a different name, username or email." : undefined}
         />
       ) : (
-        <UsersTable
-          users={filtered}
-          showStatus={includeInactive}
-          onEdit={(user) => setFormState({ open: true, user })}
-          onResetPassword={setResetUser}
-        />
+        <>
+          <UsersTable
+            users={users.data.data}
+            showStatus={includeInactive}
+            onEdit={(user) => setFormState({ open: true, user })}
+            onResetPassword={setResetUser}
+          />
+          <Pagination meta={users.data.meta} onPageChange={setPage} isFetching={users.isFetching} />
+        </>
       )}
 
       <UserFormDialog

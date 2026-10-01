@@ -1,15 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { usersApi, type CreateUserInput, type UpdateUserInput } from "./api";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { usersApi, type CreateUserInput, type ListUsersParams, type UpdateUserInput } from "./api";
 
 export const userKeys = {
   all: ["users"] as const,
-  list: (includeInactive: boolean) => [...userKeys.all, "list", { includeInactive }] as const,
+  list: (params: ListUsersParams) => [...userKeys.all, "list", params] as const,
 };
 
-export function useUsers(includeInactive = false) {
+export function useUsers(params: ListUsersParams = {}) {
   return useQuery({
-    queryKey: userKeys.list(includeInactive),
-    queryFn: () => usersApi.list(includeInactive),
+    queryKey: userKeys.list(params),
+    queryFn: () => usersApi.list(params),
+    placeholderData: keepPreviousData,
   });
 }
 

@@ -1,6 +1,8 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { CurrentUser } from '../../../auth/presentation/decorators/current-user.decorator.js';
 import { Roles } from '../../../auth/presentation/decorators/roles.decorator.js';
+import { PageResponseDto } from '../../../shared/presentation/dtos/page.response.dto.js';
+import { PaginationQueryDto } from '../../../shared/presentation/dtos/pagination.query.dto.js';
 import { UserRole } from '../../../user/domain/entities/user.entity.js';
 import { CancelSaleUseCase } from '../../application/use-cases/cancel-sale.use-case.js';
 import { CreateSaleUseCase } from '../../application/use-cases/create-sale.use-case.js';
@@ -26,9 +28,9 @@ export class SaleController {
     }
 
     @Get()
-    async list(): Promise<SaleResponseDto[]> {
-        const sales = await this.listSales.execute();
-        return sales.map(SaleResponseDto.fromEntity);
+    async list(@Query() query: PaginationQueryDto): Promise<PageResponseDto<SaleResponseDto>> {
+        const page = await this.listSales.execute(query);
+        return PageResponseDto.from(page, SaleResponseDto.fromEntity);
     }
 
     @Get(':id')

@@ -53,7 +53,7 @@ function CreateProductForm({ onDone }: { onDone: () => void }) {
   const create = useCreateProduct();
   const form = useForm<CreateProductFormInput, unknown, CreateProductFormOutput>({
     resolver: zodResolver(createProductSchema),
-    defaultValues: { name: "", description: "", sku: "", price: "", quantity: "" },
+    defaultValues: { name: "", description: "", sku: "", price: "", quantity: "", minStock: "0" },
   });
 
   const onSubmit = (values: CreateProductFormOutput) => {
@@ -101,6 +101,16 @@ function CreateProductForm({ onDone }: { onDone: () => void }) {
             min="0"
           />
         </div>
+        <TextField
+          control={form.control}
+          name="minStock"
+          label="Minimum stock"
+          type="number"
+          inputMode="numeric"
+          step="1"
+          min="0"
+          description="Alerts when the quantity reaches this value. Zero alerts only when out of stock."
+        />
         <FormError error={create.error} />
       </FieldGroup>
       <DialogFooter>
@@ -123,12 +133,18 @@ function EditProductForm({ product, onDone }: { product: Product; onDone: () => 
       name: product.name,
       description: product.description,
       price: String(product.price),
+      minStock: String(product.minStock),
     },
   });
 
   // Keep the form in sync if the dialog is reused for another product.
   useEffect(() => {
-    form.reset({ name: product.name, description: product.description, price: String(product.price) });
+    form.reset({
+      name: product.name,
+      description: product.description,
+      price: String(product.price),
+      minStock: String(product.minStock),
+    });
   }, [product, form]);
 
   const onSubmit = (values: UpdateProductFormOutput) => {
@@ -162,6 +178,16 @@ function EditProductForm({ product, onDone }: { product: Product; onDone: () => 
           inputMode="decimal"
           step="0.01"
           min="0"
+        />
+        <TextField
+          control={form.control}
+          name="minStock"
+          label="Minimum stock"
+          type="number"
+          inputMode="numeric"
+          step="1"
+          min="0"
+          description="Alerts when the quantity reaches this value. Zero alerts only when out of stock."
         />
         <FormError error={update.error} />
       </FieldGroup>

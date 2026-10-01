@@ -1,5 +1,12 @@
 import { api } from "@/lib/api/client";
-import type { Product, StockMovement } from "@/lib/api/types";
+import type { Page, PageParams, Product, StockMovement } from "@/lib/api/types";
+
+export interface ListProductsParams extends PageParams {
+  /** Matches name or SKU, case-insensitive. */
+  search?: string;
+  /** Admin only. */
+  includeInactive?: boolean;
+}
 
 export interface CreateProductInput {
   name: string;
@@ -7,18 +14,25 @@ export interface CreateProductInput {
   sku: string;
   price: number;
   quantity: number;
+  minStock: number;
 }
 
 export interface UpdateProductInput {
   name?: string;
   description?: string;
   price?: number;
+  minStock?: number;
 }
 
 export const productsApi = {
-  async list(includeInactive = false): Promise<Product[]> {
-    const { data } = await api.get<Product[]>("/products", {
-      params: includeInactive ? { includeInactive: true } : undefined,
+  async list(params: ListProductsParams = {}): Promise<Page<Product>> {
+    const { data } = await api.get<Page<Product>>("/products", {
+      params: {
+        page: params.page,
+        pageSize: params.pageSize,
+        search: params.search?.trim() || undefined,
+        includeInactive: params.includeInactive ? true : undefined,
+      },
     });
     return data;
   },

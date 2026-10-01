@@ -1,8 +1,5 @@
 import { z } from "zod";
 
-/** Products with this quantity or less are highlighted as low stock. */
-export const LOW_STOCK_THRESHOLD = 5;
-
 export const SKU_PATTERN = /^TS-\d+$/;
 
 /**
@@ -28,6 +25,11 @@ const quantitySchema = requiredNumber("Quantity is required").pipe(
   z.number().int("Quantity must be a whole number").min(0, "Quantity cannot be negative"),
 );
 
+/** Zero disables the low-stock alert until the product runs out. */
+const minStockSchema = requiredNumber("Minimum stock is required").pipe(
+  z.number().int("Minimum stock must be a whole number").min(0, "Minimum stock cannot be negative"),
+);
+
 export const createProductSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   description: z.string().trim(),
@@ -38,6 +40,7 @@ export const createProductSchema = z.object({
     .regex(SKU_PATTERN, "SKU must follow the format TS-<number> (e.g. TS-1)"),
   price: priceSchema,
   quantity: quantitySchema,
+  minStock: minStockSchema,
 });
 export type CreateProductFormInput = z.input<typeof createProductSchema>;
 export type CreateProductFormOutput = z.output<typeof createProductSchema>;
@@ -46,6 +49,7 @@ export const updateProductSchema = createProductSchema.pick({
   name: true,
   description: true,
   price: true,
+  minStock: true,
 });
 export type UpdateProductFormInput = z.input<typeof updateProductSchema>;
 export type UpdateProductFormOutput = z.output<typeof updateProductSchema>;

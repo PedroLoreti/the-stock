@@ -1,5 +1,6 @@
 import { Product, ProductProps } from '../../src/product/domain/entities/product.entity.js';
 import { FindAllProductsOptions, ProductRepository } from '../../src/product/domain/repositories/product.repository.js';
+import { Page, paginateArray } from '../../src/shared/application/pagination.js';
 import { ConcurrencyError } from '../../src/shared/domain/concurrency.error.js';
 import { Snapshotable } from './snapshotable.js';
 
@@ -11,6 +12,7 @@ function toProps(product: Product): ProductProps {
         sku: product.sku,
         price: product.price,
         quantity: product.quantity,
+        minStock: product.minStock,
         active: product.active,
         version: product.version,
     };
@@ -52,10 +54,16 @@ export class InMemoryProductRepository implements ProductRepository, Snapshotabl
         });
     }
 
-    async findAll(options: FindAllProductsOptions = {}): Promise<Product[]> {
-        return [...this.rows.values()]
+    async findAll(options: FindAllProductsOptions): Promise<Page<Product>> {
+        const search = options.search?.trim().toLowerCase();
+        const matching = [...this.rows.values()]
             .filter((row) => options.includeInactive || row.active)
+            .filter(
+                (row) => !search || row.name.toLowerCase().includes(search) || row.sku.toLowerCase().includes(search),
+            )
+            .sort((a, b) => a.name.localeCompare(b.name))
             .map((row) => Product.restore({ ...row }));
+        return paginateArray(matching, options);
     }
 
     snapshot(): unknown {

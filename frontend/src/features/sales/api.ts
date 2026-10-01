@@ -1,5 +1,5 @@
 import { api } from "@/lib/api/client";
-import type { Sale } from "@/lib/api/types";
+import type { Page, PageParams, Sale } from "@/lib/api/types";
 
 export interface CreateSaleItemInput {
   productId: string;
@@ -11,8 +11,10 @@ export interface CreateSaleInput {
 }
 
 export const salesApi = {
-  async list(): Promise<Sale[]> {
-    const { data } = await api.get<Sale[]>("/sales");
+  async list(params: PageParams = {}): Promise<Page<Sale>> {
+    const { data } = await api.get<Page<Sale>>("/sales", {
+      params: { page: params.page, pageSize: params.pageSize },
+    });
     return data;
   },
 

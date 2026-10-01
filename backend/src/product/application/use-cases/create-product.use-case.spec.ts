@@ -1,3 +1,4 @@
+import { pageRequest } from '../../../shared/application/pagination.js';
 import { InMemoryProductRepository } from '../../../../test/fakes/in-memory-product.repository.js';
 import { InMemoryStockMovementRepository } from '../../../../test/fakes/in-memory-stock-movement.repository.js';
 import { InMemoryUnitOfWork } from '../../../../test/fakes/in-memory-unit-of-work.js';
@@ -39,13 +40,13 @@ describe('CreateProductUseCase', () => {
         await products.save(makeProduct({ sku: 'TS-1' }));
 
         await expect(useCase.execute(input)).rejects.toBeInstanceOf(SkuAlreadyExistsError);
-        expect(await products.findAll()).toHaveLength(1);
+        expect((await products.findAll(pageRequest())).items).toHaveLength(1);
     });
 
     it('propagates domain validation errors without persisting anything', async () => {
         await expect(useCase.execute({ ...input, price: 0 })).rejects.toBeInstanceOf(InvalidProductError);
 
-        expect(await products.findAll()).toHaveLength(0);
+        expect((await products.findAll(pageRequest())).items).toHaveLength(0);
         expect(movements.all()).toHaveLength(0);
     });
 });

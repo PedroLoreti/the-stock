@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Page, PageRequest, skipOf } from '../../../shared/application/pagination.js';
 import { PrismaService } from '../../../shared/infrastructure/prisma/prisma.service.js';
 import { Sale } from '../../domain/entities/sale.entity.js';
 import { SaleRepository } from '../../domain/repositories/sale.repository.js';
@@ -23,11 +24,16 @@ export class PrismaSaleRepository implements SaleRepository {
         return row ? SaleMapper.toDomain(row) : null;
     }
 
-    async findAll(): Promise<Sale[]> {
-        const rows = await this.prisma.db.sale.findMany({
-            include: SALE_INCLUDE,
-            orderBy: { createdAt: 'desc' },
-        });
-        return rows.map(SaleMapper.toDomain);
+    async findAll(request: PageRequest): Promise<Page<Sale>> {
+        const [rows, total] = await Promise.all([
+            this.prisma.db.sale.findMany({
+                include: SALE_INCLUDE,
+                orderBy: { createdAt: 'desc' },
+                skip: skipOf(request),
+                take: request.pageSize,
+            }),
+            this.prisma.db.sale.count(),
+        ]);
+        return { items: rows.map(SaleMapper.toDomain), page: request.page, pageSize: request.pageSize, total };
     }
 }

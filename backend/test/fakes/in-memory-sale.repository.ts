@@ -1,6 +1,7 @@
 import { Sale, SaleStatus } from '../../src/sale/domain/entities/sale.entity.js';
 import { SaleItem, SaleItemProps } from '../../src/sale/domain/entities/sale-item.entity.js';
 import { SaleRepository } from '../../src/sale/domain/repositories/sale.repository.js';
+import { Page, PageRequest, paginateArray } from '../../src/shared/application/pagination.js';
 import { Snapshotable } from './snapshotable.js';
 
 interface SaleRow {
@@ -56,8 +57,11 @@ export class InMemorySaleRepository implements SaleRepository, Snapshotable {
         return row ? toDomain(row) : null;
     }
 
-    async findAll(): Promise<Sale[]> {
-        return [...this.rows.values()].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).map(toDomain);
+    async findAll(request: PageRequest): Promise<Page<Sale>> {
+        const sorted = [...this.rows.values()]
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            .map(toDomain);
+        return paginateArray(sorted, request);
     }
 
     count(): number {

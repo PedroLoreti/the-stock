@@ -38,6 +38,32 @@ describe('Product', () => {
         it('rejects a negative quantity', () => {
             expect(() => makeProduct({ quantity: -1 })).toThrow(InvalidProductError);
         });
+
+        it('defaults the minimum stock to zero', () => {
+            expect(makeProduct().minStock).toBe(0);
+        });
+
+        it.each([-1, 1.5])('rejects minimum stock %d (must be a non-negative integer)', (minStock) => {
+            expect(() => makeProduct({ minStock })).toThrow(InvalidProductError);
+        });
+    });
+
+    describe('isLowStock', () => {
+        it('is true when the quantity reaches the minimum stock or runs out', () => {
+            expect(makeProduct({ quantity: 10, minStock: 5 }).isLowStock).toBe(false);
+            expect(makeProduct({ quantity: 5, minStock: 5 }).isLowStock).toBe(true);
+            expect(makeProduct({ quantity: 3, minStock: 5 }).isLowStock).toBe(true);
+            expect(makeProduct({ quantity: 0, minStock: 0 }).isLowStock).toBe(true);
+            expect(makeProduct({ quantity: 1, minStock: 0 }).isLowStock).toBe(false);
+        });
+
+        it('can be changed through update', () => {
+            const product = makeProduct({ quantity: 4, minStock: 0 });
+            product.update({ minStock: 4 });
+            expect(product.minStock).toBe(4);
+            expect(product.isLowStock).toBe(true);
+            expect(() => product.update({ minStock: -1 })).toThrow(InvalidProductError);
+        });
     });
 
     describe('restore', () => {
@@ -49,6 +75,7 @@ describe('Product', () => {
                 sku: 'TS-9',
                 price: 1,
                 quantity: 0,
+                minStock: 0,
                 active: false,
                 version: 3,
             });

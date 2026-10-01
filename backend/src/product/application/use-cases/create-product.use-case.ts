@@ -12,6 +12,7 @@ export interface CreateProductInput {
     sku: string;
     price: number;
     quantity: number;
+    minStock?: number;
 }
 
 @Injectable()

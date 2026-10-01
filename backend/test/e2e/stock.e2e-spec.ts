@@ -68,12 +68,13 @@ describe('products and sales (e2e)', () => {
             await api(app).delete(`/products/${product.id}`).set(bearer(management)).expect(200);
 
             const forManagement = await api(app).get('/products').set(bearer(management)).expect(200);
-            expect(forManagement.body).toHaveLength(0);
+            expect(forManagement.body.data).toHaveLength(0);
+            expect(forManagement.body.meta).toEqual({ page: 1, pageSize: 20, total: 0, totalPages: 1 });
             await api(app).get('/products?includeInactive=true').set(bearer(management)).expect(403);
             await api(app).get('/products?includeInactive=true').set(bearer(seller)).expect(403);
 
             const forAdmin = await api(app).get('/products?includeInactive=true').set(bearer(admin)).expect(200);
-            expect(forAdmin.body).toEqual([expect.objectContaining({ id: product.id, active: false })]);
+            expect(forAdmin.body.data).toEqual([expect.objectContaining({ id: product.id, active: false })]);
 
             await api(app).post(`/products/${product.id}/restore`).set(bearer(management)).expect(403);
             const restored = await api(app).post(`/products/${product.id}/restore`).set(bearer(admin)).expect(200);
@@ -85,7 +86,7 @@ describe('products and sales (e2e)', () => {
         it('creates a product and its initial ENTRY movement', async () => {
             const product = await createProduct();
 
-            expect(product).toMatchObject({ ...validProduct, active: true });
+            expect(product).toMatchObject({ ...validProduct, minStock: 0, lowStock: false, active: true });
 
             const movements = await api(app)
                 .get(`/products/${product.id}/movements`)
@@ -225,7 +226,7 @@ describe('products and sales (e2e)', () => {
             expect(response.body.error).toBe('InsufficientStockError');
 
             const sales = await api(app).get('/sales').set(bearer(seller)).expect(200);
-            expect(sales.body).toHaveLength(0);
+            expect(sales.body.data).toHaveLength(0);
         });
 
         it('validates the cart body', async () => {
@@ -274,8 +275,9 @@ describe('products and sales (e2e)', () => {
             const movements = await api(app).get(`/products/${product.id}/movements`).set(bearer(seller)).expect(200);
             expect(movements.body.filter((m: { type: string }) => m.type === 'SALE')).toHaveLength(sold);
 
-            const sales = await api(app).get('/sales').set(bearer(seller)).expect(200);
-            expect(sales.body).toHaveLength(sold);
+            const sales = await api(app).get('/sales?pageSize=2').set(bearer(seller)).expect(200);
+            expect(sales.body.data).toHaveLength(Math.min(2, sold));
+            expect(sales.body.meta).toMatchObject({ page: 1, pageSize: 2, total: sold });
         });
     });
 });
