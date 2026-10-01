@@ -2,12 +2,17 @@ import { InMemoryProductRepository } from '../../../../test/fakes/in-memory-prod
 import { InMemorySaleRepository } from '../../../../test/fakes/in-memory-sale.repository.js';
 import { InMemoryStockMovementRepository } from '../../../../test/fakes/in-memory-stock-movement.repository.js';
 import { InMemoryUnitOfWork } from '../../../../test/fakes/in-memory-unit-of-work.js';
+import { InMemoryUserRepository } from '../../../../test/fakes/in-memory-user.repository.js';
 import { makeProduct } from '../../../../test/factories/product.factory.js';
+import { makeUser } from '../../../../test/factories/user.factory.js';
 import { StockMovementType } from '../../../product/domain/entities/stock-movement.entity.js';
 import { InsufficientStockError } from '../../../product/domain/errors/insufficient-stock.error.js';
 import { ProductInactiveError } from '../../../product/domain/errors/product-inactive.error.js';
 import { ProductNotFoundError } from '../../../product/domain/errors/product-not-found.error.js';
 import { ConcurrencyError } from '../../../shared/domain/concurrency.error.js';
+import { User } from '../../../user/domain/entities/user.entity.js';
+import { UserInactiveError } from '../../../user/domain/errors/user-inactive.error.js';
+import { UserNotFoundError } from '../../../user/domain/errors/user-not-found.error.js';
 import { SaleStatus } from '../../domain/entities/sale.entity.js';
 import { InvalidSaleError } from '../../domain/errors/invalid-sale.error.js';
 import { CreateSaleUseCase } from './create-sale.use-case.js';
@@ -16,13 +21,24 @@ describe('CreateSaleUseCase', () => {
     let products: InMemoryProductRepository;
     let movements: InMemoryStockMovementRepository;
     let sales: InMemorySaleRepository;
+    let users: InMemoryUserRepository;
+    let seller: User;
     let useCase: CreateSaleUseCase;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         products = new InMemoryProductRepository();
         movements = new InMemoryStockMovementRepository();
         sales = new InMemorySaleRepository();
-        useCase = new CreateSaleUseCase(sales, products, movements, new InMemoryUnitOfWork(products, movements, sales));
+        users = new InMemoryUserRepository();
+        seller = makeUser({ name: 'Ana Vendedora' });
+        await users.save(seller);
+        useCase = new CreateSaleUseCase(
+            sales,
+            products,
+            movements,
+            users,
+            new InMemoryUnitOfWork(products, movements, sales),
+        );
     });
 
     it('creates the sale, lowers the stock and records a SALE movement per item', async () => {
@@ -32,7 +48,7 @@ describe('CreateSaleUseCase', () => {
         await products.save(pencil);
 
         const sale = await useCase.execute({
-            userId: 'user-1',
+            userId: seller.id,
             items: [
                 { productId: pen.id, quantity: 4 },
                 { productId: pencil.id, quantity: 3 },
@@ -40,6 +56,8 @@ describe('CreateSaleUseCase', () => {
         });
 
         expect(sale.status).toBe(SaleStatus.COMPLETED);
+        expect(sale.userId).toBe(seller.id);
+        expect(sale.userName).toBe('Ana Vendedora');
         expect(sale.total).toBe(13); // 4 * 2.5 + 3 * 1
         expect((await products.findById(pen.id))!.quantity).toBe(6);
         expect((await products.findById(pencil.id))!.quantity).toBe(0);
@@ -55,13 +73,36 @@ describe('CreateSaleUseCase', () => {
         ]);
     });
 
-    it('snapshots the unit price at the time of the sale', async () => {
-        const pen = makeProduct({ price: 2.5, quantity: 10 });
+    it('returns the product name and SKU and snapshots the unit price at the time of the sale', async () => {
+        const pen = makeProduct({ name: 'Caneta Azul', sku: 'TS-7', price: 2.5, quantity: 10 });
         await products.save(pen);
 
-        const sale = await useCase.execute({ userId: 'user-1', items: [{ productId: pen.id, quantity: 1 }] });
+        const sale = await useCase.execute({ userId: seller.id, items: [{ productId: pen.id, quantity: 1 }] });
 
-        expect(sale.items[0].unitPrice).toBe(2.5);
+        expect(sale.items[0]).toMatchObject({ productName: 'Caneta Azul', productSku: 'TS-7', unitPrice: 2.5 });
+    });
+
+    it('rejects a seller that does not exist', async () => {
+        const pen = makeProduct();
+        await products.save(pen);
+
+        await expect(
+            useCase.execute({ userId: 'missing', items: [{ productId: pen.id, quantity: 1 }] }),
+        ).rejects.toBeInstanceOf(UserNotFoundError);
+    });
+
+    it('rejects a deactivated seller, without touching the stock', async () => {
+        seller.deactivate();
+        await users.save(seller);
+        const pen = makeProduct({ quantity: 10 });
+        await products.save(pen);
+
+        await expect(
+            useCase.execute({ userId: seller.id, items: [{ productId: pen.id, quantity: 1 }] }),
+        ).rejects.toBeInstanceOf(UserInactiveError);
+
+        expect((await products.findById(pen.id))!.quantity).toBe(10);
+        expect(sales.count()).toBe(0);
     });
 
     it('rejects the whole sale when any item exceeds the stock, without writing anything', async () => {
@@ -72,7 +113,7 @@ describe('CreateSaleUseCase', () => {
 
         await expect(
             useCase.execute({
-                userId: 'user-1',
+                userId: seller.id,
                 items: [
                     { productId: pen.id, quantity: 4 },
                     { productId: pencil.id, quantity: 3 },
@@ -87,7 +128,7 @@ describe('CreateSaleUseCase', () => {
 
     it('rejects an unknown product', async () => {
         await expect(
-            useCase.execute({ userId: 'user-1', items: [{ productId: 'missing', quantity: 1 }] }),
+            useCase.execute({ userId: seller.id, items: [{ productId: 'missing', quantity: 1 }] }),
         ).rejects.toBeInstanceOf(ProductNotFoundError);
     });
 
@@ -97,7 +138,7 @@ describe('CreateSaleUseCase', () => {
         await products.save(pen);
 
         await expect(
-            useCase.execute({ userId: 'user-1', items: [{ productId: pen.id, quantity: 1 }] }),
+            useCase.execute({ userId: seller.id, items: [{ productId: pen.id, quantity: 1 }] }),
         ).rejects.toBeInstanceOf(ProductInactiveError);
     });
 
@@ -107,7 +148,7 @@ describe('CreateSaleUseCase', () => {
 
         await expect(
             useCase.execute({
-                userId: 'user-1',
+                userId: seller.id,
                 items: [
                     { productId: pen.id, quantity: 1 },
                     { productId: pen.id, quantity: 1 },
@@ -121,7 +162,7 @@ describe('CreateSaleUseCase', () => {
         await products.save(pen);
         vi.spyOn(products, 'save').mockRejectedValueOnce(new ConcurrencyError());
 
-        const sale = await useCase.execute({ userId: 'user-1', items: [{ productId: pen.id, quantity: 4 }] });
+        const sale = await useCase.execute({ userId: seller.id, items: [{ productId: pen.id, quantity: 4 }] });
 
         expect((await products.findById(pen.id))!.quantity).toBe(6);
         expect(sales.count()).toBe(1); // a venda da tentativa que falhou sofreu rollback
@@ -135,7 +176,7 @@ describe('CreateSaleUseCase', () => {
         vi.spyOn(products, 'save').mockRejectedValue(new ConcurrencyError());
 
         await expect(
-            useCase.execute({ userId: 'user-1', items: [{ productId: pen.id, quantity: 4 }] }),
+            useCase.execute({ userId: seller.id, items: [{ productId: pen.id, quantity: 4 }] }),
         ).rejects.toBeInstanceOf(ConcurrencyError);
 
         expect(products.save).toHaveBeenCalledTimes(5);

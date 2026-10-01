@@ -5,13 +5,23 @@ export class SaleItemResponseDto {
     constructor(
         readonly id: string,
         readonly productId: string,
+        readonly productName: string,
+        readonly productSku: string,
         readonly quantity: number,
         readonly unitPrice: number,
         readonly subtotal: number,
     ) {}
 
     static fromEntity(item: SaleItem): SaleItemResponseDto {
-        return new SaleItemResponseDto(item.id, item.productId, item.quantity, item.unitPrice, item.subtotal);
+        return new SaleItemResponseDto(
+            item.id,
+            item.productId,
+            item.productName,
+            item.productSku,
+            item.quantity,
+            item.unitPrice,
+            item.subtotal,
+        );
     }
 }
 
@@ -19,6 +29,7 @@ export class SaleResponseDto {
     constructor(
         readonly id: string,
         readonly userId: string,
+        readonly userName: string,
         readonly status: SaleStatus,
         readonly total: number,
         readonly items: SaleItemResponseDto[],
@@ -30,6 +41,7 @@ export class SaleResponseDto {
         return new SaleResponseDto(
             sale.id,
             sale.userId,
+            sale.userName,
             sale.status,
             sale.total,
             sale.items.map(SaleItemResponseDto.fromEntity),

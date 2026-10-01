@@ -5,6 +5,8 @@ import { CreateSaleItemProps, SaleItem } from '../../src/sale/domain/entities/sa
 export function makeSaleItem(overrides: Partial<CreateSaleItemProps> = {}): SaleItem {
     return SaleItem.create({
         productId: randomUUID(),
+        productName: 'Caneta Azul',
+        productSku: 'TS-1',
         quantity: 2,
         unitPrice: 2.5,
         ...overrides,
@@ -13,6 +15,7 @@ export function makeSaleItem(overrides: Partial<CreateSaleItemProps> = {}): Sale
 
 interface MakeSaleOptions {
     userId?: string;
+    userName?: string;
     items?: SaleItem[];
     createdAt?: Date;
     status?: SaleStatus;
@@ -27,6 +30,7 @@ export function makeSale(options: MakeSaleOptions = {}): Sale {
     return Sale.restore({
         id: randomUUID(),
         userId: options.userId ?? randomUUID(),
+        userName: options.userName ?? 'Vendedor',
         status: options.status ?? SaleStatus.COMPLETED,
         items: options.items ?? [makeSaleItem()],
         createdAt: options.createdAt ?? new Date(),

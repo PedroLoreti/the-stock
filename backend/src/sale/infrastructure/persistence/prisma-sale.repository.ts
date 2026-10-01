@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../shared/infrastructure/prisma/prisma.service.js';
 import { Sale } from '../../domain/entities/sale.entity.js';
 import { SaleRepository } from '../../domain/repositories/sale.repository.js';
-import { SaleMapper } from './sale.mapper.js';
+import { SALE_INCLUDE, SaleMapper } from './sale.mapper.js';
 
 @Injectable()
 export class PrismaSaleRepository implements SaleRepository {
@@ -19,13 +19,13 @@ export class PrismaSaleRepository implements SaleRepository {
     }
 
     async findById(id: string): Promise<Sale | null> {
-        const row = await this.prisma.db.sale.findUnique({ where: { id }, include: { items: true } });
+        const row = await this.prisma.db.sale.findUnique({ where: { id }, include: SALE_INCLUDE });
         return row ? SaleMapper.toDomain(row) : null;
     }
 
     async findAll(): Promise<Sale[]> {
         const rows = await this.prisma.db.sale.findMany({
-            include: { items: true },
+            include: SALE_INCLUDE,
             orderBy: { createdAt: 'desc' },
         });
         return rows.map(SaleMapper.toDomain);

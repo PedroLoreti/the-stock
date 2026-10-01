@@ -12,34 +12,40 @@ describe('Sale', () => {
         it('starts as COMPLETED with the given items', () => {
             const items = [makeSaleItem(), makeSaleItem()];
 
-            const sale = Sale.create('user-1', items);
+            const sale = Sale.create({ userId: 'user-1', userName: 'Ana', items });
 
             expect(sale.status).toBe(SaleStatus.COMPLETED);
+            expect(sale.userName).toBe('Ana');
             expect(sale.items).toHaveLength(2);
             expect(sale.cancelledAt).toBeNull();
             expect(sale.createdAt).toBeInstanceOf(Date);
         });
 
         it('requires at least one item', () => {
-            expect(() => Sale.create('user-1', [])).toThrow(InvalidSaleError);
+            expect(() => Sale.create({ userId: 'user-1', userName: 'Ana', items: [] })).toThrow(InvalidSaleError);
         });
     });
 
     describe('total', () => {
         it('sums the subtotals of all items', () => {
-            const sale = Sale.create('user-1', [
-                makeSaleItem({ quantity: 2, unitPrice: 2.5 }), // 5
-                makeSaleItem({ quantity: 1, unitPrice: 10 }), // 10
-            ]);
+            const sale = Sale.create({
+                userId: 'user-1',
+                userName: 'Ana',
+                items: [
+                    makeSaleItem({ quantity: 2, unitPrice: 2.5 }), // 5
+                    makeSaleItem({ quantity: 1, unitPrice: 10 }), // 10
+                ],
+            });
 
             expect(sale.total).toBe(15);
         });
 
         it('rounds the total to 2 decimal places', () => {
-            const sale = Sale.create('user-1', [
-                makeSaleItem({ quantity: 1, unitPrice: 0.1 }),
-                makeSaleItem({ quantity: 1, unitPrice: 0.2 }),
-            ]);
+            const sale = Sale.create({
+                userId: 'user-1',
+                userName: 'Ana',
+                items: [makeSaleItem({ quantity: 1, unitPrice: 0.1 }), makeSaleItem({ quantity: 1, unitPrice: 0.2 })],
+            });
 
             expect(sale.total).toBe(0.3);
         });

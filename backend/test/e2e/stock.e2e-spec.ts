@@ -26,7 +26,7 @@ describe('products and sales (e2e)', () => {
             .set(bearer(as))
             .send({ ...validProduct, ...overrides })
             .expect(201);
-        return response.body as { id: string; quantity: number };
+        return response.body as { id: string; name: string; sku: string; quantity: number };
     }
 
     beforeAll(async () => {
@@ -181,9 +181,16 @@ describe('products and sales (e2e)', () => {
                 .set(bearer(seller))
                 .send({ items: [{ productId: product.id, quantity: 4 }] })
                 .expect(201);
-            expect(sale.body).toMatchObject({ status: 'COMPLETED', total: 10, userId: seller.user.id });
+            expect(sale.body).toMatchObject({
+                status: 'COMPLETED',
+                total: 10,
+                userId: seller.user.id,
+                userName: seller.user.name,
+            });
             expect(sale.body.items[0]).toMatchObject({
                 productId: product.id,
+                productName: product.name,
+                productSku: product.sku,
                 quantity: 4,
                 unitPrice: 2.5,
                 subtotal: 10,

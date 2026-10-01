@@ -5,6 +5,9 @@ import { InvalidSaleError } from '../errors/invalid-sale.error.js';
 export interface SaleItemProps {
     id: string;
     productId: string;
+    /** Nome e SKU vêm do cadastro do produto (join na leitura); só o preço é congelado na venda. */
+    productName: string;
+    productSku: string;
     quantity: number;
     unitPrice: number;
 }
@@ -33,6 +36,12 @@ export class SaleItem {
     }
     get productId() {
         return this.props.productId;
+    }
+    get productName() {
+        return this.props.productName;
+    }
+    get productSku() {
+        return this.props.productSku;
     }
     get quantity() {
         return this.props.quantity;
