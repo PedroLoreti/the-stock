@@ -5,6 +5,7 @@ import { GetProductUseCase } from './application/use-cases/get-product.use-case.
 import { ListProductsUseCase } from './application/use-cases/list-products.use-case.js';
 import { ListStockMovementsUseCase } from './application/use-cases/list-stock-movements.use-case.js';
 import { RegisterStockEntryUseCase } from './application/use-cases/register-stock-entry.use-case.js';
+import { RestoreProductUseCase } from './application/use-cases/restore-product.use-case.js';
 import { UpdateProductUseCase } from './application/use-cases/update-product.use-case.js';
 import { ProductRepository } from './domain/repositories/product.repository.js';
 import { StockMovementRepository } from './domain/repositories/stock-movement.repository.js';
@@ -24,6 +25,7 @@ import { ProductController } from './presentation/controllers/product.controller
         DeactivateProductUseCase,
         RegisterStockEntryUseCase,
         ListStockMovementsUseCase,
+        RestoreProductUseCase,
     ],
     exports: [ProductRepository, StockMovementRepository],
 })

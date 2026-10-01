@@ -16,9 +16,9 @@ export interface RefreshTokensOutput extends IssuedTokens {
 }
 
 /**
- * Rotação de refresh token: cada refresh consome o token atual e emite um par novo.
- * Se um token já consumido for apresentado de novo, alguém o roubou (ou o cliente está
- * dessincronizado); por segurança todas as sessões do usuário são encerradas.
+ * Rotação de refresh token: cada refresh consome o token atual (que fica guardado como
+ * revogado) e emite um par novo. Se um token já consumido for apresentado de novo, alguém
+ * o roubou (ou o cliente está dessincronizado); por segurança todas as sessões do usuário caem.
  */
 @Injectable()
 export class RefreshTokensUseCase {
@@ -37,7 +37,7 @@ export class RefreshTokensUseCase {
         }
 
         if (stored.isRevoked()) {
-            await this.refreshTokenRepository.revokeAllByUserId(stored.userId, now);
+            await this.refreshTokenRepository.deleteAllByUserId(stored.userId);
             throw new InvalidRefreshTokenError();
         }
         if (stored.isExpired(now)) {
@@ -46,7 +46,7 @@ export class RefreshTokensUseCase {
 
         const user = await this.userRepository.findById(stored.userId);
         if (!user || !user.active) {
-            await this.refreshTokenRepository.revokeAllByUserId(stored.userId, now);
+            await this.refreshTokenRepository.deleteAllByUserId(stored.userId);
             throw new InvalidRefreshTokenError();
         }
 

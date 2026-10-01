@@ -6,17 +6,15 @@ export interface LogoutInput {
     refreshToken: string;
 }
 
-/** Idempotente: um token desconhecido ou já revogado não é erro (o resultado é o mesmo: sessão encerrada). */
+/** Idempotente: um token desconhecido não é erro (o resultado é o mesmo: sessão encerrada). */
 @Injectable()
 export class LogoutUseCase {
     constructor(private readonly refreshTokenRepository: RefreshTokenRepository) {}
 
     async execute(input: LogoutInput): Promise<void> {
         const stored = await this.refreshTokenRepository.findByTokenHash(hashRefreshTokenSecret(input.refreshToken));
-        if (!stored || stored.isRevoked()) {
-            return;
+        if (stored) {
+            await this.refreshTokenRepository.delete(stored.id);
         }
-        stored.revoke(new Date());
-        await this.refreshTokenRepository.save(stored);
     }
 }

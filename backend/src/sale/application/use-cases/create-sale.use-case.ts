@@ -16,6 +16,8 @@ export interface CreateSaleItemInput {
 }
 
 export interface CreateSaleInput {
+    /** Vem do token do usuário autenticado, nunca do body. */
+    userId: string;
     items: CreateSaleItemInput[];
 }
 
@@ -57,7 +59,7 @@ export class CreateSaleUseCase {
             });
         });
 
-        const sale = Sale.create(saleItems);
+        const sale = Sale.create(input.userId, saleItems);
 
         await this.unitOfWork.run(async () => {
             await this.saleRepository.save(sale);

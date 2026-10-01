@@ -1,10 +1,28 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    DefaultValuePipe,
+    Delete,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Param,
+    ParseBoolPipe,
+    ParseUUIDPipe,
+    Patch,
+    Post,
+    Query,
+} from '@nestjs/common';
+import { CurrentUser } from '../../../auth/presentation/decorators/current-user.decorator.js';
+import { Roles } from '../../../auth/presentation/decorators/roles.decorator.js';
+import { UserRole } from '../../../user/domain/entities/user.entity.js';
 import { CreateProductUseCase } from '../../application/use-cases/create-product.use-case.js';
 import { DeactivateProductUseCase } from '../../application/use-cases/deactivate-product.use-case.js';
 import { GetProductUseCase } from '../../application/use-cases/get-product.use-case.js';
 import { ListProductsUseCase } from '../../application/use-cases/list-products.use-case.js';
 import { ListStockMovementsUseCase } from '../../application/use-cases/list-stock-movements.use-case.js';
 import { RegisterStockEntryUseCase } from '../../application/use-cases/register-stock-entry.use-case.js';
+import { RestoreProductUseCase } from '../../application/use-cases/restore-product.use-case.js';
 import { UpdateProductUseCase } from '../../application/use-cases/update-product.use-case.js';
 import { CreateProductRequestDto } from '../dtos/create-product.request.dto.js';
 import { ProductResponseDto } from '../dtos/product.response.dto.js';
@@ -12,6 +30,10 @@ import { RegisterStockEntryRequestDto } from '../dtos/register-stock-entry.reque
 import { StockMovementResponseDto } from '../dtos/stock-movement.response.dto.js';
 import { UpdateProductRequestDto } from '../dtos/update-product.request.dto.js';
 
+/**
+ * Leitura: qualquer usuário autenticado. Escrita: gestão e admin.
+ * Restaurar um produto desativado: só admin.
+ */
 @Controller('products')
 export class ProductController {
     constructor(
@@ -20,19 +42,24 @@ export class ProductController {
         private readonly getProduct: GetProductUseCase,
         private readonly updateProduct: UpdateProductUseCase,
         private readonly deactivateProduct: DeactivateProductUseCase,
+        private readonly restoreProduct: RestoreProductUseCase,
         private readonly registerStockEntry: RegisterStockEntryUseCase,
         private readonly listStockMovements: ListStockMovementsUseCase,
     ) {}
 
     @Post()
+    @Roles(UserRole.MANAGEMENT, UserRole.ADMIN)
     async create(@Body() body: CreateProductRequestDto): Promise<ProductResponseDto> {
         const product = await this.createProduct.execute(body);
         return ProductResponseDto.fromEntity(product);
     }
 
     @Get()
-    async list(): Promise<ProductResponseDto[]> {
-        const products = await this.listProducts.execute();
+    async list(
+        @Query('includeInactive', new DefaultValuePipe(false), ParseBoolPipe) includeInactive: boolean,
+        @CurrentUser() user: CurrentUser,
+    ): Promise<ProductResponseDto[]> {
+        const products = await this.listProducts.execute({ includeInactive, requesterRole: user.role });
         return products.map(ProductResponseDto.fromEntity);
     }
 
@@ -43,6 +70,7 @@ export class ProductController {
     }
 
     @Patch(':id')
+    @Roles(UserRole.MANAGEMENT, UserRole.ADMIN)
     async update(
         @Param('id', ParseUUIDPipe) id: string,
         @Body() body: UpdateProductRequestDto,
@@ -52,13 +80,23 @@ export class ProductController {
     }
 
     @Delete(':id')
+    @Roles(UserRole.MANAGEMENT, UserRole.ADMIN)
     async deactivate(@Param('id', ParseUUIDPipe) id: string): Promise<ProductResponseDto> {
         const product = await this.deactivateProduct.execute({ id });
         return ProductResponseDto.fromEntity(product);
     }
 
+    @Post(':id/restore')
+    @HttpCode(HttpStatus.OK)
+    @Roles(UserRole.ADMIN)
+    async restore(@Param('id', ParseUUIDPipe) id: string): Promise<ProductResponseDto> {
+        const product = await this.restoreProduct.execute({ id });
+        return ProductResponseDto.fromEntity(product);
+    }
+
     @Post(':id/entries')
     @HttpCode(HttpStatus.OK)
+    @Roles(UserRole.MANAGEMENT, UserRole.ADMIN)
     async registerEntry(
         @Param('id', ParseUUIDPipe) id: string,
         @Body() body: RegisterStockEntryRequestDto,

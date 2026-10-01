@@ -1,4 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { CurrentUser } from '../../../auth/presentation/decorators/current-user.decorator.js';
+import { Roles } from '../../../auth/presentation/decorators/roles.decorator.js';
+import { UserRole } from '../../../user/domain/entities/user.entity.js';
 import { CancelSaleUseCase } from '../../application/use-cases/cancel-sale.use-case.js';
 import { CreateSaleUseCase } from '../../application/use-cases/create-sale.use-case.js';
 import { GetSaleUseCase } from '../../application/use-cases/get-sale.use-case.js';
@@ -6,6 +9,7 @@ import { ListSalesUseCase } from '../../application/use-cases/list-sales.use-cas
 import { CreateSaleRequestDto } from '../dtos/create-sale.request.dto.js';
 import { SaleResponseDto } from '../dtos/sale.response.dto.js';
 
+/** Qualquer usuário autenticado vende e consulta; só gestão e admin cancelam. */
 @Controller('sales')
 export class SaleController {
     constructor(
@@ -16,8 +20,8 @@ export class SaleController {
     ) {}
 
     @Post()
-    async create(@Body() body: CreateSaleRequestDto): Promise<SaleResponseDto> {
-        const sale = await this.createSale.execute(body);
+    async create(@Body() body: CreateSaleRequestDto, @CurrentUser() user: CurrentUser): Promise<SaleResponseDto> {
+        const sale = await this.createSale.execute({ userId: user.id, items: body.items });
         return SaleResponseDto.fromEntity(sale);
     }
 
@@ -35,6 +39,7 @@ export class SaleController {
 
     @Post(':id/cancel')
     @HttpCode(HttpStatus.OK)
+    @Roles(UserRole.MANAGEMENT, UserRole.ADMIN)
     async cancel(@Param('id', ParseUUIDPipe) id: string): Promise<SaleResponseDto> {
         const sale = await this.cancelSale.execute({ id });
         return SaleResponseDto.fromEntity(sale);

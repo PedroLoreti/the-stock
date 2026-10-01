@@ -5,6 +5,7 @@ import { Snapshotable } from './snapshotable.js';
 
 interface SaleRow {
     id: string;
+    userId: string;
     status: SaleStatus;
     items: SaleItemProps[];
     createdAt: Date;
@@ -14,6 +15,7 @@ interface SaleRow {
 function toRow(sale: Sale): SaleRow {
     return {
         id: sale.id,
+        userId: sale.userId,
         status: sale.status,
         items: sale.items.map((item) => ({
             id: item.id,
@@ -29,6 +31,7 @@ function toRow(sale: Sale): SaleRow {
 function toDomain(row: SaleRow): Sale {
     return Sale.restore({
         id: row.id,
+        userId: row.userId,
         status: row.status,
         items: row.items.map((item) => SaleItem.restore({ ...item })),
         createdAt: row.createdAt,

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConcurrencyError } from '../../../shared/domain/concurrency.error.js';
 import { PrismaService } from '../../../shared/infrastructure/prisma/prisma.service.js';
 import { Product } from '../../domain/entities/product.entity.js';
-import { ProductRepository } from '../../domain/repositories/product.repository.js';
+import { FindAllProductsOptions, ProductRepository } from '../../domain/repositories/product.repository.js';
 import { ProductMapper } from './product.mapper.js';
 
 @Injectable()
@@ -47,8 +47,11 @@ export class PrismaProductRepository implements ProductRepository {
         return rows.map(ProductMapper.toDomain);
     }
 
-    async findAll(): Promise<Product[]> {
-        const rows = await this.prisma.db.product.findMany({ orderBy: { name: 'asc' } });
+    async findAll(options: FindAllProductsOptions = {}): Promise<Product[]> {
+        const rows = await this.prisma.db.product.findMany({
+            where: options.includeInactive ? undefined : { active: true },
+            orderBy: { name: 'asc' },
+        });
         return rows.map(ProductMapper.toDomain);
     }
 }

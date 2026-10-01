@@ -190,6 +190,8 @@ describe('Auth use cases', () => {
                 InvalidRefreshTokenError,
             );
             await expect(login.execute({ login: 'ana', password: 'brand-new-password' })).resolves.toBeDefined();
+            // O refresh antigo apagado nao e tratado como roubo: a sessao nova continua valida.
+            await expect(refresh.execute({ refreshToken: result.refreshToken })).resolves.toBeDefined();
         });
 
         it('rejects a wrong current password', async () => {

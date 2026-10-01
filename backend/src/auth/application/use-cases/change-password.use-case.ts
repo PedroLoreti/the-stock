@@ -54,7 +54,7 @@ export class ChangePasswordUseCase {
 
         return this.unitOfWork.run(async () => {
             await this.userRepository.save(user);
-            await this.refreshTokenRepository.revokeAllByUserId(user.id, now);
+            await this.refreshTokenRepository.deleteAllByUserId(user.id);
             const tokens = await this.tokenIssuer.issueFor(user, now);
             return { ...tokens, user };
         });

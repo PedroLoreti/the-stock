@@ -22,10 +22,12 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
         return row ? RefreshTokenMapper.toDomain(row) : null;
     }
 
-    async revokeAllByUserId(userId: string, now: Date): Promise<void> {
-        await this.prisma.db.refreshToken.updateMany({
-            where: { userId, revokedAt: null },
-            data: { revokedAt: now },
-        });
+    async delete(id: string): Promise<void> {
+        // deleteMany não falha se o token já tiver sumido (logout repetido, por exemplo).
+        await this.prisma.db.refreshToken.deleteMany({ where: { id } });
+    }
+
+    async deleteAllByUserId(userId: string): Promise<void> {
+        await this.prisma.db.refreshToken.deleteMany({ where: { userId } });
     }
 }

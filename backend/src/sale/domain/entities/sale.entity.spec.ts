@@ -12,7 +12,7 @@ describe('Sale', () => {
         it('starts as COMPLETED with the given items', () => {
             const items = [makeSaleItem(), makeSaleItem()];
 
-            const sale = Sale.create(items);
+            const sale = Sale.create('user-1', items);
 
             expect(sale.status).toBe(SaleStatus.COMPLETED);
             expect(sale.items).toHaveLength(2);
@@ -21,13 +21,13 @@ describe('Sale', () => {
         });
 
         it('requires at least one item', () => {
-            expect(() => Sale.create([])).toThrow(InvalidSaleError);
+            expect(() => Sale.create('user-1', [])).toThrow(InvalidSaleError);
         });
     });
 
     describe('total', () => {
         it('sums the subtotals of all items', () => {
-            const sale = Sale.create([
+            const sale = Sale.create('user-1', [
                 makeSaleItem({ quantity: 2, unitPrice: 2.5 }), // 5
                 makeSaleItem({ quantity: 1, unitPrice: 10 }), // 10
             ]);
@@ -36,7 +36,7 @@ describe('Sale', () => {
         });
 
         it('rounds the total to 2 decimal places', () => {
-            const sale = Sale.create([
+            const sale = Sale.create('user-1', [
                 makeSaleItem({ quantity: 1, unitPrice: 0.1 }),
                 makeSaleItem({ quantity: 1, unitPrice: 0.2 }),
             ]);

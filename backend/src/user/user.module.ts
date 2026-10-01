@@ -12,8 +12,10 @@ import { UserRepository } from './domain/repositories/user.repository.js';
 import { BootstrapAdminRunner } from './infrastructure/bootstrap-admin.runner.js';
 import { PrismaUserRepository } from './infrastructure/persistence/prisma-user.repository.js';
 import { BcryptPasswordHasher } from './infrastructure/security/bcrypt-password-hasher.js';
+import { UserController } from './presentation/controllers/user.controller.js';
 
 @Module({
+    controllers: [UserController],
     providers: [
         { provide: UserRepository, useClass: PrismaUserRepository },
         { provide: PasswordHasher, useClass: BcryptPasswordHasher },

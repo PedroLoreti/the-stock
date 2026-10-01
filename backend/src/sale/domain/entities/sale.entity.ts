@@ -13,6 +13,8 @@ export type SaleStatus = (typeof SaleStatus)[keyof typeof SaleStatus];
 
 export interface SaleProps {
     id: string;
+    /** Usuário que registrou a venda. */
+    userId: string;
     status: SaleStatus;
     items: SaleItem[];
     createdAt: Date;
@@ -24,12 +26,16 @@ const CANCELLATION_WINDOW_MS = 5 * 60 * 60 * 1000;
 export class Sale {
     private constructor(private props: SaleProps) {}
 
-    static create(items: SaleItem[]): Sale {
+    static create(userId: string, items: SaleItem[]): Sale {
+        if (!userId) {
+            throw new InvalidSaleError('Sale must have a user');
+        }
         if (items.length === 0) {
             throw new InvalidSaleError('Sale must have at least one item');
         }
         return new Sale({
             id: randomUUID(),
+            userId,
             status: SaleStatus.COMPLETED,
             items,
             createdAt: new Date(),
@@ -55,6 +61,9 @@ export class Sale {
 
     get id() {
         return this.props.id;
+    }
+    get userId() {
+        return this.props.userId;
     }
     get status() {
         return this.props.status;

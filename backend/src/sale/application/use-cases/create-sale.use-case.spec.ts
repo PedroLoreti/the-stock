@@ -32,6 +32,7 @@ describe('CreateSaleUseCase', () => {
         await products.save(pencil);
 
         const sale = await useCase.execute({
+            userId: 'user-1',
             items: [
                 { productId: pen.id, quantity: 4 },
                 { productId: pencil.id, quantity: 3 },
@@ -58,7 +59,7 @@ describe('CreateSaleUseCase', () => {
         const pen = makeProduct({ price: 2.5, quantity: 10 });
         await products.save(pen);
 
-        const sale = await useCase.execute({ items: [{ productId: pen.id, quantity: 1 }] });
+        const sale = await useCase.execute({ userId: 'user-1', items: [{ productId: pen.id, quantity: 1 }] });
 
         expect(sale.items[0].unitPrice).toBe(2.5);
     });
@@ -71,6 +72,7 @@ describe('CreateSaleUseCase', () => {
 
         await expect(
             useCase.execute({
+                userId: 'user-1',
                 items: [
                     { productId: pen.id, quantity: 4 },
                     { productId: pencil.id, quantity: 3 },
@@ -84,9 +86,9 @@ describe('CreateSaleUseCase', () => {
     });
 
     it('rejects an unknown product', async () => {
-        await expect(useCase.execute({ items: [{ productId: 'missing', quantity: 1 }] })).rejects.toBeInstanceOf(
-            ProductNotFoundError,
-        );
+        await expect(
+            useCase.execute({ userId: 'user-1', items: [{ productId: 'missing', quantity: 1 }] }),
+        ).rejects.toBeInstanceOf(ProductNotFoundError);
     });
 
     it('rejects an inactive product', async () => {
@@ -94,9 +96,9 @@ describe('CreateSaleUseCase', () => {
         pen.deactivate();
         await products.save(pen);
 
-        await expect(useCase.execute({ items: [{ productId: pen.id, quantity: 1 }] })).rejects.toBeInstanceOf(
-            ProductInactiveError,
-        );
+        await expect(
+            useCase.execute({ userId: 'user-1', items: [{ productId: pen.id, quantity: 1 }] }),
+        ).rejects.toBeInstanceOf(ProductInactiveError);
     });
 
     it('rejects the same product twice in one sale', async () => {
@@ -105,6 +107,7 @@ describe('CreateSaleUseCase', () => {
 
         await expect(
             useCase.execute({
+                userId: 'user-1',
                 items: [
                     { productId: pen.id, quantity: 1 },
                     { productId: pen.id, quantity: 1 },
@@ -118,7 +121,7 @@ describe('CreateSaleUseCase', () => {
         await products.save(pen);
         vi.spyOn(products, 'save').mockRejectedValueOnce(new ConcurrencyError());
 
-        const sale = await useCase.execute({ items: [{ productId: pen.id, quantity: 4 }] });
+        const sale = await useCase.execute({ userId: 'user-1', items: [{ productId: pen.id, quantity: 4 }] });
 
         expect((await products.findById(pen.id))!.quantity).toBe(6);
         expect(sales.count()).toBe(1); // a venda da tentativa que falhou sofreu rollback
@@ -131,9 +134,9 @@ describe('CreateSaleUseCase', () => {
         await products.save(pen);
         vi.spyOn(products, 'save').mockRejectedValue(new ConcurrencyError());
 
-        await expect(useCase.execute({ items: [{ productId: pen.id, quantity: 4 }] })).rejects.toBeInstanceOf(
-            ConcurrencyError,
-        );
+        await expect(
+            useCase.execute({ userId: 'user-1', items: [{ productId: pen.id, quantity: 4 }] }),
+        ).rejects.toBeInstanceOf(ConcurrencyError);
 
         expect(products.save).toHaveBeenCalledTimes(5);
         expect((await products.findById(pen.id))!.quantity).toBe(10);

@@ -40,6 +40,7 @@ model User {
   updatedAt          DateTime @updatedAt @map("updated_at")
 
   refreshTokens RefreshToken[]
+  sales         Sale[]
 
   @@map("users")
 }
@@ -94,14 +95,17 @@ model StockMovement {
 
 model Sale {
   id          String     @id @db.Uuid
+  userId      String     @map("user_id") @db.Uuid
   status      SaleStatus @default(COMPLETED)
   total       Decimal    @db.Decimal(10, 2)
   createdAt   DateTime   @default(now()) @map("created_at")
   cancelledAt DateTime?  @map("cancelled_at")
 
+  user      User            @relation(fields: [userId], references: [id])
   items     SaleItem[]
   movements StockMovement[]
 
+  @@index([userId])
   @@map("sales")
 }
 

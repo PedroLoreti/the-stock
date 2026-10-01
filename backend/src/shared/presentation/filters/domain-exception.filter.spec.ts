@@ -8,7 +8,17 @@ import { InvalidSaleError } from '../../../sale/domain/errors/invalid-sale.error
 import { SaleAlreadyCancelledError } from '../../../sale/domain/errors/sale-already-cancelled.error.js';
 import { SaleCancellationWindowExpiredError } from '../../../sale/domain/errors/sale-cancellation-window-expired.error.js';
 import { SaleNotFoundError } from '../../../sale/domain/errors/sale-not-found.error.js';
+import { InvalidCredentialsError } from '../../../auth/domain/errors/invalid-credentials.error.js';
+import { InvalidRefreshTokenError } from '../../../auth/domain/errors/invalid-refresh-token.error.js';
+import { PasswordChangeRequiredError } from '../../../auth/domain/errors/password-change-required.error.js';
+import { WrongCurrentPasswordError } from '../../../auth/domain/errors/wrong-current-password.error.js';
+import { CannotDeactivateSelfError } from '../../../user/domain/errors/cannot-deactivate-self.error.js';
+import { EmailAlreadyExistsError } from '../../../user/domain/errors/email-already-exists.error.js';
+import { InvalidPasswordError } from '../../../user/domain/errors/invalid-password.error.js';
+import { UserNotFoundError } from '../../../user/domain/errors/user-not-found.error.js';
+import { UsernameAlreadyExistsError } from '../../../user/domain/errors/username-already-exists.error.js';
 import { ConcurrencyError } from '../../domain/concurrency.error.js';
+import { ForbiddenActionError } from '../../domain/forbidden-action.error.js';
 import { DomainError } from '../../domain/domain.error.js';
 import { DomainExceptionFilter } from './domain-exception.filter.js';
 
@@ -24,6 +34,16 @@ describe('DomainExceptionFilter', () => {
         [new SaleNotFoundError(), 404],
         [new SkuAlreadyExistsError(), 409],
         [new ConcurrencyError(), 409],
+        [new UserNotFoundError(), 404],
+        [new UsernameAlreadyExistsError(), 409],
+        [new EmailAlreadyExistsError(), 409],
+        [new InvalidCredentialsError(), 401],
+        [new InvalidRefreshTokenError(), 401],
+        [new PasswordChangeRequiredError(), 403],
+        [new ForbiddenActionError(), 403],
+        [new CannotDeactivateSelfError(), 422],
+        [new WrongCurrentPasswordError(), 400],
+        [new InvalidPasswordError('x'), 400],
         [new InsufficientStockError(), 422],
         [new ProductInactiveError(), 422],
         [new SaleAlreadyCancelledError(), 422],

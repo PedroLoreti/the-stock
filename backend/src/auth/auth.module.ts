@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { optionalEnv, parseDurationMs, requireEnv } from '../shared/infrastructure/config/env.js';
 import { UserModule } from '../user/user.module.js';
@@ -14,6 +15,9 @@ import { RefreshTokenRepository } from './domain/repositories/refresh-token.repo
 import { EnvAuthConfig } from './infrastructure/env-auth-config.js';
 import { PrismaRefreshTokenRepository } from './infrastructure/persistence/prisma-refresh-token.repository.js';
 import { JwtTokenService } from './infrastructure/security/jwt-token.service.js';
+import { AuthController } from './presentation/controllers/auth.controller.js';
+import { JwtAuthGuard } from './presentation/guards/jwt-auth.guard.js';
+import { RolesGuard } from './presentation/guards/roles.guard.js';
 
 @Module({
     imports: [
@@ -27,7 +31,11 @@ import { JwtTokenService } from './infrastructure/security/jwt-token.service.js'
             }),
         }),
     ],
+    controllers: [AuthController],
     providers: [
+        // Guards globais, nesta ordem: autenticação primeiro, depois papéis.
+        { provide: APP_GUARD, useClass: JwtAuthGuard },
+        { provide: APP_GUARD, useClass: RolesGuard },
         { provide: RefreshTokenRepository, useClass: PrismaRefreshTokenRepository },
         { provide: TokenService, useClass: JwtTokenService },
         { provide: AuthConfig, useClass: EnvAuthConfig },

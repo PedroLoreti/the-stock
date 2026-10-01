@@ -12,6 +12,7 @@ export function makeSaleItem(overrides: Partial<CreateSaleItemProps> = {}): Sale
 }
 
 interface MakeSaleOptions {
+    userId?: string;
     items?: SaleItem[];
     createdAt?: Date;
     status?: SaleStatus;
@@ -25,6 +26,7 @@ interface MakeSaleOptions {
 export function makeSale(options: MakeSaleOptions = {}): Sale {
     return Sale.restore({
         id: randomUUID(),
+        userId: options.userId ?? randomUUID(),
         status: options.status ?? SaleStatus.COMPLETED,
         items: options.items ?? [makeSaleItem()],
         createdAt: options.createdAt ?? new Date(),

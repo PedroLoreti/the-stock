@@ -1,5 +1,5 @@
 import { Product, ProductProps } from '../../src/product/domain/entities/product.entity.js';
-import { ProductRepository } from '../../src/product/domain/repositories/product.repository.js';
+import { FindAllProductsOptions, ProductRepository } from '../../src/product/domain/repositories/product.repository.js';
 import { ConcurrencyError } from '../../src/shared/domain/concurrency.error.js';
 import { Snapshotable } from './snapshotable.js';
 
@@ -52,8 +52,10 @@ export class InMemoryProductRepository implements ProductRepository, Snapshotabl
         });
     }
 
-    async findAll(): Promise<Product[]> {
-        return [...this.rows.values()].map((row) => Product.restore({ ...row }));
+    async findAll(options: FindAllProductsOptions = {}): Promise<Product[]> {
+        return [...this.rows.values()]
+            .filter((row) => options.includeInactive || row.active)
+            .map((row) => Product.restore({ ...row }));
     }
 
     snapshot(): unknown {

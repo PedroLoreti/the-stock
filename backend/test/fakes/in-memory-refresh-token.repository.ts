@@ -25,10 +25,14 @@ export class InMemoryRefreshTokenRepository implements RefreshTokenRepository, S
         return row ? RefreshToken.restore({ ...row }) : null;
     }
 
-    async revokeAllByUserId(userId: string, now: Date): Promise<void> {
-        for (const row of this.rows.values()) {
-            if (row.userId === userId && row.revokedAt === null) {
-                row.revokedAt = now;
+    async delete(id: string): Promise<void> {
+        this.rows.delete(id);
+    }
+
+    async deleteAllByUserId(userId: string): Promise<void> {
+        for (const [id, row] of this.rows) {
+            if (row.userId === userId) {
+                this.rows.delete(id);
             }
         }
     }

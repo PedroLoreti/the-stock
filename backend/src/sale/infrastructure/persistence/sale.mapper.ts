@@ -8,6 +8,7 @@ export class SaleMapper {
     static toDomain(row: SaleRow): Sale {
         return Sale.restore({
             id: row.id,
+            userId: row.userId,
             status: row.status,
             items: row.items.map((item) =>
                 SaleItem.restore({
@@ -25,6 +26,7 @@ export class SaleMapper {
     static toPersistence(sale: Sale) {
         return {
             id: sale.id,
+            userId: sale.userId,
             status: sale.status,
             total: sale.total,
             createdAt: sale.createdAt,

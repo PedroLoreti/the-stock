@@ -1,6 +1,8 @@
 import { InMemoryProductRepository } from '../../../../test/fakes/in-memory-product.repository.js';
 import { InMemoryStockMovementRepository } from '../../../../test/fakes/in-memory-stock-movement.repository.js';
 import { makeProduct } from '../../../../test/factories/product.factory.js';
+import { ForbiddenActionError } from '../../../shared/domain/forbidden-action.error.js';
+import { UserRole } from '../../../user/domain/entities/user.entity.js';
 import { StockMovement } from '../../domain/entities/stock-movement.entity.js';
 import { InvalidProductError } from '../../domain/errors/invalid-product.error.js';
 import { ProductNotFoundError } from '../../domain/errors/product-not-found.error.js';
@@ -37,12 +39,37 @@ describe('Product read/update use cases', () => {
     });
 
     describe('ListProductsUseCase', () => {
-        it('returns every product', async () => {
+        it('returns only active products by default', async () => {
+            const inactive = makeProduct();
+            inactive.deactivate();
             await products.save(makeProduct());
-            await products.save(makeProduct());
+            await products.save(inactive);
 
-            expect(await new ListProductsUseCase(products).execute()).toHaveLength(2);
+            expect(await new ListProductsUseCase(products).execute()).toHaveLength(1);
         });
+
+        it('lets administrators include inactive products', async () => {
+            const inactive = makeProduct();
+            inactive.deactivate();
+            await products.save(makeProduct());
+            await products.save(inactive);
+
+            const result = await new ListProductsUseCase(products).execute({
+                includeInactive: true,
+                requesterRole: UserRole.ADMIN,
+            });
+
+            expect(result).toHaveLength(2);
+        });
+
+        it.each([UserRole.MANAGEMENT, UserRole.SELLER, undefined])(
+            'forbids includeInactive for role %s',
+            async (requesterRole) => {
+                await expect(
+                    new ListProductsUseCase(products).execute({ includeInactive: true, requesterRole }),
+                ).rejects.toBeInstanceOf(ForbiddenActionError);
+            },
+        );
     });
 
     describe('UpdateProductUseCase', () => {

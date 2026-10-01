@@ -18,6 +18,7 @@ export class SaleItemResponseDto {
 export class SaleResponseDto {
     constructor(
         readonly id: string,
+        readonly userId: string,
         readonly status: SaleStatus,
         readonly total: number,
         readonly items: SaleItemResponseDto[],
@@ -28,6 +29,7 @@ export class SaleResponseDto {
     static fromEntity(sale: Sale): SaleResponseDto {
         return new SaleResponseDto(
             sale.id,
+            sale.userId,
             sale.status,
             sale.total,
             sale.items.map(SaleItemResponseDto.fromEntity),
