@@ -23,7 +23,7 @@ interface UsersTableProps {
 
 export function UsersTable({ users, showStatus, onEdit, onResetPassword }: UsersTableProps) {
   return (
-    <div className="overflow-hidden rounded-xl border">
+    <div className="overflow-hidden rounded-xl border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -42,9 +42,7 @@ export function UsersTable({ users, showStatus, onEdit, onResetPassword }: Users
                 <span className="inline-flex flex-wrap items-center gap-2">
                   {user.name}
                   {user.mustChangePassword ? (
-                    <Badge variant="outline" className="border-amber-500/50 text-amber-700 dark:text-amber-400">
-                      Temporary password
-                    </Badge>
+                    <Badge variant="warning">Temporary password</Badge>
                   ) : null}
                 </span>
               </TableCell>

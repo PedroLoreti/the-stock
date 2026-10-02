@@ -11,15 +11,18 @@ import {
 import type { StockMovement, StockMovementType } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format";
 
-const MOVEMENT_LABELS: Record<StockMovementType, { label: string; sign: "+" | "-" }> = {
-  ENTRY: { label: "Entry", sign: "+" },
-  SALE: { label: "Sale", sign: "-" },
-  SALE_CANCELLATION: { label: "Sale cancelled", sign: "+" },
+const MOVEMENT_LABELS: Record<
+  StockMovementType,
+  { label: string; sign: "+" | "-"; variant: "success" | "outline" | "warning" }
+> = {
+  ENTRY: { label: "Entry", sign: "+", variant: "success" },
+  SALE: { label: "Sale", sign: "-", variant: "outline" },
+  SALE_CANCELLATION: { label: "Sale cancelled", sign: "+", variant: "warning" },
 };
 
 export function MovementsTable({ movements }: { movements: StockMovement[] }) {
   return (
-    <div className="overflow-hidden rounded-xl border">
+    <div className="overflow-hidden rounded-xl border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -31,12 +34,12 @@ export function MovementsTable({ movements }: { movements: StockMovement[] }) {
         </TableHeader>
         <TableBody>
           {movements.map((movement) => {
-            const { label, sign } = MOVEMENT_LABELS[movement.type];
+            const { label, sign, variant } = MOVEMENT_LABELS[movement.type];
             return (
               <TableRow key={movement.id}>
                 <TableCell className="tabular-nums">{formatDateTime(movement.createdAt)}</TableCell>
                 <TableCell>
-                  <Badge variant={sign === "+" ? "secondary" : "outline"}>{label}</Badge>
+                  <Badge variant={variant}>{label}</Badge>
                 </TableCell>
                 <TableCell className="text-right font-medium tabular-nums">
                   {sign}

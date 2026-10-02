@@ -77,7 +77,7 @@ export default function SaleDetailPage({ params }: PageProps<"/sales/[id]">) {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-base font-semibold">Items</h2>
-        <div className="overflow-hidden rounded-xl border">
+        <div className="overflow-hidden rounded-xl border bg-card">
           <Table>
             <TableHeader>
               <TableRow>

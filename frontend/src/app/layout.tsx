@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const geistSans = Geist({
+const dmSans = DM_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
 });
@@ -20,9 +20,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
+    // suppressHydrationWarning: next-themes sets the theme class on <html> before hydration.
     <html
       lang="pt-BR"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${dmSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <Providers>{children}</Providers>

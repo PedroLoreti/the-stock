@@ -32,7 +32,7 @@ export function QueryError({ error, onRetry }: { error: unknown; onRetry?: () =>
 
 export function EmptyState({ title, description, action }: { title: ReactNode; description?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-10 text-center">
+    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed bg-card p-10 text-center">
       <p className="font-medium">{title}</p>
       {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
       {action ? <div className="mt-2">{action}</div> : null}

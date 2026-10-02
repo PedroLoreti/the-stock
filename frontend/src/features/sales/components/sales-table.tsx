@@ -13,7 +13,7 @@ import { SaleStatusBadge } from "./sale-status-badge";
 
 export function SalesTable({ sales }: { sales: Sale[] }) {
   return (
-    <div className="overflow-hidden rounded-xl border">
+    <div className="overflow-hidden rounded-xl border bg-card">
       <Table>
         <TableHeader>
           <TableRow>

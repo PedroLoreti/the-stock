@@ -23,7 +23,7 @@ interface ProductsTableProps {
 
 export function ProductsTable({ products, showStatus, onEdit, onAddStock }: ProductsTableProps) {
   return (
-    <div className="overflow-hidden rounded-xl border">
+    <div className="overflow-hidden rounded-xl border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
