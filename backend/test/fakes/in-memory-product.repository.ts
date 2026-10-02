@@ -8,6 +8,7 @@ function toProps(product: Product): ProductProps {
     return {
         id: product.id,
         name: product.name,
+        brand: product.brand,
         description: product.description,
         sku: product.sku,
         price: product.price,
@@ -59,7 +60,11 @@ export class InMemoryProductRepository implements ProductRepository, Snapshotabl
         const matching = [...this.rows.values()]
             .filter((row) => options.includeInactive || row.active)
             .filter(
-                (row) => !search || row.name.toLowerCase().includes(search) || row.sku.toLowerCase().includes(search),
+                (row) =>
+                    !search ||
+                    row.name.toLowerCase().includes(search) ||
+                    row.brand.toLowerCase().includes(search) ||
+                    row.sku.toLowerCase().includes(search),
             )
             .sort((a, b) => a.name.localeCompare(b.name))
             .map((row) => Product.restore({ ...row }));

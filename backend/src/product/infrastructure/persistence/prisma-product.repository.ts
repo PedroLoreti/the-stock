@@ -57,6 +57,7 @@ export class PrismaProductRepository implements ProductRepository {
                 ? {
                       OR: [
                           { name: { contains: search, mode: 'insensitive' } },
+                          { brand: { contains: search, mode: 'insensitive' } },
                           { sku: { contains: search, mode: 'insensitive' } },
                       ],
                   }

@@ -61,11 +61,12 @@ describe('Product read/update use cases', () => {
             expect(second.items.map((p) => p.name)).toEqual(['Caderno']);
         });
 
-        it('filters by name or sku, ignoring case', async () => {
-            await products.save(makeProduct({ name: 'Caneta Azul', sku: 'TS-100' }));
-            await products.save(makeProduct({ name: 'Lápis', sku: 'TS-200' }));
+        it('filters by name, brand or sku, ignoring case', async () => {
+            await products.save(makeProduct({ name: 'Caneta Azul', brand: 'BIC', sku: 'TS-100' }));
+            await products.save(makeProduct({ name: 'Lápis', brand: 'Faber-Castell', sku: 'TS-200' }));
 
             expect((await new ListProductsUseCase(products).execute({ search: 'caneta' })).items).toHaveLength(1);
+            expect((await new ListProductsUseCase(products).execute({ search: 'faber' })).items).toHaveLength(1);
             expect((await new ListProductsUseCase(products).execute({ search: 'ts-200' })).items).toHaveLength(1);
             expect((await new ListProductsUseCase(products).execute({ search: 'xyz' })).total).toBe(0);
         });

@@ -13,7 +13,14 @@ describe('CreateProductUseCase', () => {
     let movements: InMemoryStockMovementRepository;
     let useCase: CreateProductUseCase;
 
-    const input = { name: 'Caneta Azul', description: 'Esferográfica', sku: 'TS-1', price: 2.5, quantity: 10 };
+    const input = {
+        name: 'Caneta Azul',
+        brand: 'BIC',
+        description: 'Esferográfica',
+        sku: 'TS-1',
+        price: 2.5,
+        quantity: 10,
+    };
 
     beforeEach(() => {
         products = new InMemoryProductRepository();

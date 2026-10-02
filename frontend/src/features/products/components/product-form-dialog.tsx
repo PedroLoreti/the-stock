@@ -53,7 +53,7 @@ function CreateProductForm({ onDone }: { onDone: () => void }) {
   const create = useCreateProduct();
   const form = useForm<CreateProductFormInput, unknown, CreateProductFormOutput>({
     resolver: zodResolver(createProductSchema),
-    defaultValues: { name: "", description: "", sku: "", price: "", quantity: "", minStock: "0" },
+    defaultValues: { name: "", brand: "", description: "", sku: "", price: "", quantity: "", minStock: "0" },
   });
 
   const onSubmit = (values: CreateProductFormOutput) => {
@@ -73,6 +73,7 @@ function CreateProductForm({ onDone }: { onDone: () => void }) {
       </DialogHeader>
       <FieldGroup className="my-4">
         <TextField control={form.control} name="name" label="Name" autoFocus />
+        <TextField control={form.control} name="brand" label="Brand" />
         <TextField
           control={form.control}
           name="sku"
@@ -131,6 +132,7 @@ function EditProductForm({ product, onDone }: { product: Product; onDone: () => 
     resolver: zodResolver(updateProductSchema),
     defaultValues: {
       name: product.name,
+      brand: product.brand,
       description: product.description,
       price: String(product.price),
       minStock: String(product.minStock),
@@ -141,6 +143,7 @@ function EditProductForm({ product, onDone }: { product: Product; onDone: () => 
   useEffect(() => {
     form.reset({
       name: product.name,
+      brand: product.brand,
       description: product.description,
       price: String(product.price),
       minStock: String(product.minStock),
@@ -169,6 +172,7 @@ function EditProductForm({ product, onDone }: { product: Product; onDone: () => 
       </DialogHeader>
       <FieldGroup className="my-4">
         <TextField control={form.control} name="name" label="Name" autoFocus />
+        <TextField control={form.control} name="brand" label="Brand" />
         <TextareaField control={form.control} name="description" label="Description" rows={2} />
         <TextField
           control={form.control}

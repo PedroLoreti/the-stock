@@ -2,7 +2,7 @@ import { api } from "@/lib/api/client";
 import type { Page, PageParams, Product, StockMovement } from "@/lib/api/types";
 
 export interface ListProductsParams extends PageParams {
-  /** Matches name or SKU, case-insensitive. */
+  /** Matches name, brand or SKU, case-insensitive. */
   search?: string;
   /** Admin only. */
   includeInactive?: boolean;
@@ -10,6 +10,7 @@ export interface ListProductsParams extends PageParams {
 
 export interface CreateProductInput {
   name: string;
+  brand: string;
   description: string;
   sku: string;
   price: number;
@@ -19,6 +20,7 @@ export interface CreateProductInput {
 
 export interface UpdateProductInput {
   name?: string;
+  brand?: string;
   description?: string;
   price?: number;
   minStock?: number;

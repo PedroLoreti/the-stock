@@ -6,6 +6,8 @@ import { ProductInactiveError } from '../errors/product-inactive.error.js';
 export interface ProductProps {
     id: string;
     name: string;
+    /** Texto livre. O mesmo produto pode existir em marcas diferentes, cada uma com seu SKU. */
+    brand: string;
     description: string;
     sku: string;
     price: number;
@@ -18,7 +20,7 @@ export interface ProductProps {
 }
 
 export type CreateProductProps = Omit<ProductProps, 'id' | 'active' | 'version' | 'minStock'> & { minStock?: number };
-export type UpdateProductProps = Partial<Pick<ProductProps, 'name' | 'description' | 'price' | 'minStock'>>;
+export type UpdateProductProps = Partial<Pick<ProductProps, 'name' | 'brand' | 'description' | 'price' | 'minStock'>>;
 
 const SKU_PATTERN = /^TS-\d+$/;
 
@@ -27,6 +29,7 @@ export class Product {
 
     static create(data: CreateProductProps): Product {
         Product.validateName(data.name);
+        Product.validateBrand(data.brand);
         Product.validateSku(data.sku);
         Product.validatePrice(data.price);
         if (data.quantity < 0) {
@@ -38,6 +41,7 @@ export class Product {
         return new Product({
             id: randomUUID(),
             ...data,
+            brand: data.brand.trim(),
             sku: data.sku.trim(),
             minStock,
             active: true,
@@ -53,6 +57,10 @@ export class Product {
         if (data.name !== undefined) {
             Product.validateName(data.name);
             this.props.name = data.name;
+        }
+        if (data.brand !== undefined) {
+            Product.validateBrand(data.brand);
+            this.props.brand = data.brand.trim();
         }
         if (data.description !== undefined) {
             this.props.description = data.description;
@@ -96,6 +104,9 @@ export class Product {
     get name() {
         return this.props.name;
     }
+    get brand() {
+        return this.props.brand;
+    }
     get description() {
         return this.props.description;
     }
@@ -131,6 +142,12 @@ export class Product {
     private static validateName(name: string): void {
         if (!name?.trim()) {
             throw new InvalidProductError('Name is required');
+        }
+    }
+
+    private static validateBrand(brand: string): void {
+        if (!brand?.trim()) {
+            throw new InvalidProductError('Brand is required');
         }
     }
 

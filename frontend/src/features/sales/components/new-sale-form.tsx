@@ -98,7 +98,7 @@ export function NewSaleForm() {
           <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search products by name or SKU"
+            placeholder="Search products by name, brand or SKU"
             className="pl-8"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -126,6 +126,9 @@ export function NewSaleForm() {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium">{product.name}</span>
+                        {product.brand ? (
+                          <span className="text-sm text-muted-foreground">{product.brand}</span>
+                        ) : null}
                         <span className="font-mono text-xs text-muted-foreground">{product.sku}</span>
                         <StockBadge product={product} />
                       </div>
@@ -171,7 +174,12 @@ export function NewSaleForm() {
                 <li key={line.product.id} className="flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-medium">{line.product.name}</div>
+                      <div className="truncate text-sm font-medium">
+                        {line.product.name}
+                        {line.product.brand ? (
+                          <span className="font-normal text-muted-foreground"> · {line.product.brand}</span>
+                        ) : null}
+                      </div>
                       <div className="text-xs text-muted-foreground">
                         {formatCurrency(line.product.price)} each
                       </div>

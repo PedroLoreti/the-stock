@@ -62,6 +62,7 @@ model RefreshToken {
 model Product {
   id          String   @id @db.Uuid
   name        String
+  brand       String
   description String
   sku         String   @unique
   price       Decimal  @db.Decimal(10, 2)

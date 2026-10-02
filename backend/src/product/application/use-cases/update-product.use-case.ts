@@ -6,6 +6,7 @@ import { ProductRepository } from '../../domain/repositories/product.repository.
 export interface UpdateProductInput {
     id: string;
     name?: string;
+    brand?: string;
     description?: string;
     price?: number;
     minStock?: number;

@@ -50,7 +50,12 @@ export default function ProductDetailPage({ params }: PageProps<"/products/[id]"
             <StockBadge product={data} />
           </span>
         }
-        description={<span className="font-mono">{data.sku}</span>}
+        description={
+          <>
+            <span className="font-mono">{data.sku}</span>
+            {data.brand ? ` · ${data.brand}` : null}
+          </>
+        }
         actions={
           canManage && data.active ? (
             <>

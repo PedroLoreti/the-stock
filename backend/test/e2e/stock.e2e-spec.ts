@@ -18,7 +18,14 @@ describe('products and sales (e2e)', () => {
     let management: Session;
     let seller: Session;
 
-    const validProduct = { name: 'Caneta Azul', description: 'Esferográfica', sku: 'TS-1', price: 2.5, quantity: 10 };
+    const validProduct = {
+        name: 'Caneta Azul',
+        brand: 'BIC',
+        description: 'Esferográfica',
+        sku: 'TS-1',
+        price: 2.5,
+        quantity: 10,
+    };
 
     async function createProduct(overrides: Partial<typeof validProduct> = {}, as: Session = management) {
         const response = await api(app)
@@ -141,9 +148,9 @@ describe('products and sales (e2e)', () => {
             const response = await api(app)
                 .patch(`/products/${product.id}`)
                 .set(bearer(management))
-                .send({ name: 'Caneta Preta', price: 3 })
+                .send({ name: 'Caneta Preta', brand: 'Pilot', price: 3 })
                 .expect(200);
-            expect(response.body).toMatchObject({ name: 'Caneta Preta', price: 3, quantity: 10 });
+            expect(response.body).toMatchObject({ name: 'Caneta Preta', brand: 'Pilot', price: 3, quantity: 10 });
 
             await api(app).patch(`/products/${product.id}`).set(bearer(management)).send({ quantity: 99 }).expect(400);
         });

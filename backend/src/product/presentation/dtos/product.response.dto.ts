@@ -4,6 +4,7 @@ export class ProductResponseDto {
     constructor(
         readonly id: string,
         readonly name: string,
+        readonly brand: string,
         readonly description: string,
         readonly sku: string,
         readonly price: number,
@@ -18,6 +19,7 @@ export class ProductResponseDto {
         return new ProductResponseDto(
             product.id,
             product.name,
+            product.brand,
             product.description,
             product.sku,
             product.price,

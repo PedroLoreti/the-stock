@@ -8,6 +8,7 @@ import { StockMovementRepository } from '../../domain/repositories/stock-movemen
 
 export interface CreateProductInput {
     name: string;
+    brand: string;
     description: string;
     sku: string;
     price: number;

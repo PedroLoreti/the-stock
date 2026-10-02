@@ -7,6 +7,11 @@ export class UpdateProductRequestDto {
     name?: string;
 
     @IsOptional()
+    @IsString()
+    @IsNotEmpty({ message: 'Brand cannot be empty' })
+    brand?: string;
+
+    @IsOptional()
     @IsString({ message: 'Description must be a string' })
     description?: string;
 

@@ -32,6 +32,7 @@ const minStockSchema = requiredNumber("Minimum stock is required").pipe(
 
 export const createProductSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
+  brand: z.string().trim().min(1, "Brand is required"),
   description: z.string().trim(),
   sku: z
     .string()
@@ -47,6 +48,7 @@ export type CreateProductFormOutput = z.output<typeof createProductSchema>;
 
 export const updateProductSchema = createProductSchema.pick({
   name: true,
+  brand: true,
   description: true,
   price: true,
   minStock: true,

@@ -5,6 +5,10 @@ export class CreateProductRequestDto {
     @IsNotEmpty({ message: 'Name is required' })
     name: string;
 
+    @IsString()
+    @IsNotEmpty({ message: 'Brand is required' })
+    brand: string;
+
     @IsString({ message: 'Description must be a string' })
     description: string;
 

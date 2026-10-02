@@ -6,6 +6,7 @@ export class ProductMapper {
         return Product.restore({
             id: row.id,
             name: row.name,
+            brand: row.brand,
             description: row.description,
             sku: row.sku,
             price: row.price.toNumber(),
@@ -20,6 +21,7 @@ export class ProductMapper {
         return {
             id: product.id,
             name: product.name,
+            brand: product.brand,
             description: product.description,
             sku: product.sku,
             price: product.price,

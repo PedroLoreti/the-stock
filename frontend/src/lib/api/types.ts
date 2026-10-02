@@ -37,6 +37,8 @@ export interface PageParams {
 export interface Product {
   id: string;
   name: string;
+  /** Free text. The same product may exist under different brands, each with its own SKU. */
+  brand: string;
   description: string;
   sku: string;
   price: number;

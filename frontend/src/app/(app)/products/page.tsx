@@ -65,7 +65,7 @@ export default function ProductsPage() {
           <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search by name or SKU"
+            placeholder="Search by name, brand or SKU"
             className="pl-8"
             value={search}
             onChange={(event) => updateSearch(event.target.value)}

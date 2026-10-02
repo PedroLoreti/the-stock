@@ -19,6 +19,14 @@ describe('Product', () => {
             expect(makeProduct({ sku: '  TS-7  ' }).sku).toBe('TS-7');
         });
 
+        it('trims the brand', () => {
+            expect(makeProduct({ brand: '  BIC  ' }).brand).toBe('BIC');
+        });
+
+        it.each(['', '   '])('rejects an empty brand (%j)', (brand) => {
+            expect(() => makeProduct({ brand })).toThrow(InvalidProductError);
+        });
+
         it('allows an initial quantity of zero', () => {
             expect(makeProduct({ quantity: 0 }).quantity).toBe(0);
         });
@@ -71,6 +79,7 @@ describe('Product', () => {
             const product = Product.restore({
                 id: 'fixed-id',
                 name: 'Lápis',
+                brand: 'Faber-Castell',
                 description: '',
                 sku: 'TS-9',
                 price: 1,
@@ -100,6 +109,12 @@ describe('Product', () => {
         it('rejects an empty name', () => {
             const product = makeProduct();
             expect(() => product.update({ name: ' ' })).toThrow(InvalidProductError);
+        });
+
+        it('rejects an empty brand and keeps the previous one', () => {
+            const product = makeProduct({ brand: 'BIC' });
+            expect(() => product.update({ brand: ' ' })).toThrow(InvalidProductError);
+            expect(product.brand).toBe('BIC');
         });
 
         it('rejects a non-positive price and keeps the previous one', () => {

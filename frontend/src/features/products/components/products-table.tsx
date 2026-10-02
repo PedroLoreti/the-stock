@@ -29,6 +29,7 @@ export function ProductsTable({ products, showStatus, onEdit, onAddStock }: Prod
           <TableRow>
             <TableHead>SKU</TableHead>
             <TableHead>Name</TableHead>
+            <TableHead>Brand</TableHead>
             <TableHead className="text-right">Price</TableHead>
             <TableHead className="text-right">Quantity</TableHead>
             {showStatus ? <TableHead>Status</TableHead> : null}
@@ -47,6 +48,7 @@ export function ProductsTable({ products, showStatus, onEdit, onAddStock }: Prod
                   <p className="line-clamp-1 text-xs text-muted-foreground">{product.description}</p>
                 ) : null}
               </TableCell>
+              <TableCell>{product.brand}</TableCell>
               <TableCell className="text-right tabular-nums">{formatCurrency(product.price)}</TableCell>
               <TableCell className="text-right">
                 <span className="inline-flex items-center justify-end gap-2 tabular-nums">

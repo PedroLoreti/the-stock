@@ -7,6 +7,7 @@ export function makeProduct(overrides: Partial<CreateProductProps> = {}): Produc
     skuCounter++;
     return Product.create({
         name: 'Caneta Azul',
+        brand: 'BIC',
         description: 'Esferográfica',
         sku: `TS-${skuCounter}`,
         price: 2.5,

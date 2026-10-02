@@ -4,7 +4,7 @@ import { Product } from '../entities/product.entity.js';
 export interface FindAllProductsOptions extends PageRequest {
     /** Por padrão só os ativos são listados. */
     includeInactive?: boolean;
-    /** Trecho do nome ou do SKU, sem distinguir maiúsculas. */
+    /** Trecho do nome, da marca ou do SKU, sem distinguir maiúsculas. */
     search?: string;
 }
 

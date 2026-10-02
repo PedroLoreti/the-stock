@@ -21,7 +21,7 @@ describe('dashboard (e2e)', () => {
         const response = await api(app)
             .post('/products')
             .set(bearer(management))
-            .send({ name: `Product ${sku}`, description: '', sku, price, quantity, minStock })
+            .send({ name: `Product ${sku}`, brand: 'Acme', description: '', sku, price, quantity, minStock })
             .expect(201);
         return response.body as { id: string };
     }
