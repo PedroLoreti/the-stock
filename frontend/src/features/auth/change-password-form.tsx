@@ -86,10 +86,10 @@ export function ChangePasswordForm() {
             type="submit"
             size="lg"
             className="h-11 w-full text-xs font-semibold tracking-[0.12em] uppercase"
-            disabled={changePassword.isPending}
+            disabled={changePassword.isPending || changePassword.isSuccess}
           >
-            {changePassword.isPending ? "Saving..." : "Save new password"}
-            {changePassword.isPending ? null : <ArrowRightIcon data-icon="inline-end" />}
+            {changePassword.isPending || changePassword.isSuccess ? "Saving..." : "Save new password"}
+            {changePassword.isPending || changePassword.isSuccess ? null : <ArrowRightIcon data-icon="inline-end" />}
           </Button>
           {required ? (
             <Button type="button" variant="ghost" className="w-full" onClick={() => signOut()}>

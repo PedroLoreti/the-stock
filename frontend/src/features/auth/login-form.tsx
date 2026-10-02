@@ -60,10 +60,10 @@ export function LoginForm() {
             type="submit"
             size="lg"
             className="h-11 w-full text-xs font-semibold tracking-[0.12em] uppercase"
-            disabled={login.isPending}
+            disabled={login.isPending || login.isSuccess}
           >
-            {login.isPending ? "Signing in..." : "Sign in"}
-            {login.isPending ? null : <ArrowRightIcon data-icon="inline-end" />}
+            {login.isPending || login.isSuccess ? "Signing in..." : "Sign in"}
+            {login.isPending || login.isSuccess ? null : <ArrowRightIcon data-icon="inline-end" />}
           </Button>
         </FieldGroup>
       </form>

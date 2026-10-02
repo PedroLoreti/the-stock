@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MinusIcon, PlusIcon, SearchIcon, ShoppingCartIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
@@ -31,6 +31,9 @@ export function NewSaleForm() {
 
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartLine[]>([]);
+  // Synchronous guard: React state (isPending/disabled) only applies after a re-render,
+  // so a burst of clicks in the same tick would otherwise all reach the API.
+  const submitLock = useRef(false);
 
   const debouncedSearch = useDebouncedValue(search.trim());
   const products = useProducts({ page: 1, pageSize: PICKER_PAGE_SIZE, search: debouncedSearch || undefined });
@@ -40,6 +43,9 @@ export function NewSaleForm() {
   const hiddenMatches = products.data ? products.data.meta.total - products.data.data.length : 0;
 
   const total = cart.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
+  // Stays true after success too: the button must not re-enable while we navigate away,
+  // otherwise a second click would register the same sale again.
+  const isSubmitting = createSale.isPending || createSale.isSuccess;
 
   const setQuantity = (productId: string, quantity: number) => {
     setCart((lines) =>
@@ -67,12 +73,19 @@ export function NewSaleForm() {
   };
 
   const submit = () => {
+    if (submitLock.current || isSubmitting || cart.length === 0) return;
+    submitLock.current = true;
     createSale.mutate(
       { items: cart.map((line) => ({ productId: line.product.id, quantity: line.quantity })) },
       {
         onSuccess: (sale) => {
+          setCart([]);
           toast.success(`Sale completed: ${formatCurrency(sale.total)}`);
           router.push(`/sales/${sale.id}`);
+        },
+        // Only a failure unlocks: after success we leave the page.
+        onError: () => {
+          submitLock.current = false;
         },
       },
     );
@@ -217,8 +230,8 @@ export function NewSaleForm() {
             <span className="text-lg font-semibold tabular-nums">{formatCurrency(total)}</span>
           </div>
           <FormError error={createSale.error} />
-          <Button className="w-full" disabled={cart.length === 0 || createSale.isPending} onClick={submit}>
-            {createSale.isPending ? "Completing..." : "Complete sale"}
+          <Button className="w-full" disabled={cart.length === 0 || isSubmitting} onClick={submit}>
+            {createSale.isPending ? "Completing..." : createSale.isSuccess ? "Opening sale..." : "Complete sale"}
           </Button>
         </CardContent>
       </Card>
