@@ -83,6 +83,8 @@ Entre com `admin` / `admin123`. O sistema vai pedir uma nova senha no primeiro a
 
 Para mudar portas, senhas ou o segredo do JWT, copie o `.env.example` para `.env` na raiz. Todas as variáveis têm valor padrão.
 
+> **Atenção:** não defina `NODE_ENV=production` na API sem HTTPS. Em modo produção, o cookie de refresh é marcado como `Secure`, e o navegador só o guarda em conexões HTTPS (ou em `localhost`). Acessando por HTTP comum, o login deixa de funcionar. Por isso o `docker-compose.yaml` deixa essa variável indefinida.
+
 Para parar:
 
 ```bash
