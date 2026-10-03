@@ -1,118 +1,117 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# The Stock — API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST de um sistema de controle de estoque (estoque único) e ponto de venda: produtos, movimentações de estoque, vendas e usuários com papéis.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## ✨ Technologies
 
-## Description
+- **NestJS 12** + **TypeScript**
+- **Prisma 7** (gerador `prisma-client` + `@prisma/adapter-pg`) com **PostgreSQL**
+- **JWT** (`@nestjs/jwt`) com refresh token opaco e rotativo em cookie httpOnly
+- **bcrypt**, **helmet**, **@nestjs/throttler**, **class-validator** / **class-transformer**
+- **Vitest** + **Supertest** para testes unitários e end-to-end
+- **oxlint** + **Prettier**
+- **Docker** (imagem multi-stage, migrações aplicadas ao iniciar)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🚀 Features
 
-## Project setup
+**Produtos e estoque**
+- Cadastro, edição, busca e paginação de produtos (nome, marca, descrição, SKU, preço, estoque mínimo).
+- Exclusão lógica (soft delete), com restauração restrita ao admin.
+- Entradas de estoque e histórico completo de movimentações por produto (`ENTRY`, `SALE`, `SALE_CANCELLATION`).
+- Indicador de estoque baixo (`quantity <= minStock`) devolvido pela API.
+- Sem venda acima do estoque: lock otimista (`version`) mais um `CHECK (quantity >= 0)` no banco.
+
+**Vendas**
+- Vendas em carrinho, com vários itens. O preço unitário é copiado para cada item, então mudanças de preço posteriores não alteram o histórico.
+- Cancelamento em até 5 horas após a venda, devolvendo os itens ao estoque.
+
+**Autenticação e usuários**
+- Login por username ou email. Token de acesso de vida curta (15 min), enviado no header Bearer.
+- Refresh token em cookie httpOnly `SameSite=Strict`, rotacionado a cada uso. O reuso de um token já rotacionado é tratado como roubo e derruba todas as sessões do usuário.
+- Admin inicial criado no primeiro boot. O primeiro login obriga a troca de senha.
+- Três papéis:
+
+| Ação | ADMIN | MANAGEMENT | SELLER |
+|---|:-:|:-:|:-:|
+| Consultar produtos e vender | ✅ | ✅ | ✅ |
+| Cadastrar/editar produtos e registrar entradas de estoque | ✅ | ✅ | |
+| Cancelar vendas | ✅ | ✅ | |
+| Restaurar produtos excluídos | ✅ | | |
+| Gerenciar usuários (criar, papéis, desativar, redefinir senha) | ✅ | | |
+
+**Dashboard**
+- Um endpoint agregado (`GET /dashboard`) com o faturamento de hoje e dos últimos 7 dias, ticket médio, valor em estoque (oculto para vendedores), alertas de estoque baixo, últimas vendas e produtos mais vendidos.
+
+**Segurança**
+- Validação global que rejeita campos desconhecidos, headers de segurança (helmet), CORS restrito à origem do frontend e rate limiting, com limite mais rígido no login.
+
+## 📍 The Process
+
+O projeto começou como um CRUD simples de estoque. Logo troquei a entidade genérica "estoque" por um modelo de verdade: **Product**, **StockMovement**, **Sale** e **SaleItem**, todos sobre um único estoque.
+
+A partir daí dividi cada módulo (`product`, `sale`, `user`, `auth`, `dashboard`) nas camadas **domain / application / infrastructure / presentation**:
+
+- **Domain:** as entidades guardam as regras de negócio, como a janela de cancelamento e o estoque baixo.
+- **Application:** os casos de uso dependem só de repositórios abstratos e de um contrato de `UnitOfWork`.
+- **Infrastructure:** o Prisma implementa esses contratos, com mappers e transações.
+
+Como os casos de uso dependem só de contratos, eles têm testes unitários com fakes em memória. Uma suíte end-to-end separada exercita a pilha HTTP real contra um banco de teste dedicado.
+
+O primeiro problema de verdade foi a concorrência: duas vendas da última unidade não podem dar certo ao mesmo tempo. Resolvi com **lock otimista** no produto, apoiado por uma constraint no banco como última linha de defesa.
+
+Depois veio a autenticação, feita "como manda o livro":
+
+- Senhas com hash bcrypt.
+- Um JWT de vida curta mais um refresh token opaco. Só o hash dele fica no banco, ele é rotacionado a cada uso e o reuso é detectado.
+- Guards por papel e troca de senha obrigatória para o admin inicial.
+
+Mais tarde as listagens ganharam **paginação e busca**. Com isso, somar listas no navegador deixou de funcionar para o dashboard, que virou **um único endpoint agregado** calculado em SQL.
+
+Por fim, empacotei a API com **Docker**: uma imagem em dois estágios que aplica as migrações pendentes antes de subir o servidor.
+
+## 🚦 Running the Project
+
+### Com Docker (stack completa)
+
+Na raiz do repositório:
 
 ```bash
-$ npm install
+docker compose up -d --build
 ```
 
-## Compile and run the project
+Isso sobe o PostgreSQL, a API em <http://localhost:3000> e o app web em <http://localhost:3001>. Também aplica as migrações e, com o banco vazio, cria dados de exemplo (3 produtos, 2 entradas de estoque e 3 vendas).
+
+Entre com `admin` / `admin123`. O sistema vai pedir uma nova senha.
+
+Para mudar portas ou segredos, copie o `.env.example` para `.env` na raiz do repositório. Todas as variáveis têm valor padrão.
+
+### Localmente
+
+Requisitos: **Node.js 24** e **PostgreSQL 15+**.
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cd backend
+npm install
+cp .env.example .env          # defina DATABASE_URL e JWT_SECRET
+npx prisma migrate deploy     # cria as tabelas
+npm run db:seed               # opcional: dados de exemplo (só com o banco vazio)
+npm run start:dev             # http://localhost:3000
 ```
 
-## Run tests
+| Variável | Descrição |
+|---|---|
+| `DATABASE_URL` | String de conexão do PostgreSQL |
+| `JWT_SECRET` | **Obrigatória.** Segredo usado para assinar os tokens de acesso |
+| `JWT_ACCESS_TTL` / `JWT_REFRESH_TTL` | Duração dos tokens (padrão `15m` / `7d`) |
+| `ADMIN_USERNAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Admin inicial, criado quando não existe nenhum usuário |
+| `CORS_ORIGIN` | Origem(ns) do frontend, separadas por vírgula |
+| `THROTTLE_LIMIT` / `LOGIN_THROTTLE_LIMIT` | Requisições por minuto por IP (geral / login) |
+
+### Testes
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm test             # testes unitários
+npm run test:e2e     # end-to-end: precisa do .env.test (veja o .env.test.example) apontando para um banco separado
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Observability
-
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
-
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-This project is already instrumented. Create a free account at [observe.nestjs.com](https://observe.nestjs.com), add an application, and paste the generated app key and secret into the `ObserveModule.forRoot()` call in `src/app.module.ts`.
-
-The free plan needs no payment details and covers 300,000 events a month. You can also browse the [live demo](https://www.observe-demo.nestjs.com/dashboard) first - the whole dashboard over a busy service's data, with nothing to install.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observe](https://observe.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+A suíte end-to-end apaga o banco a cada teste. Nunca aponte o `.env.test` para o banco de desenvolvimento.
