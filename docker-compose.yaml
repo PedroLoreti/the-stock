@@ -1,12 +1,3 @@
-# The Stock: PostgreSQL + NestJS API + Next.js web.
-#
-#   docker compose up -d --build   # build images, run migrations, add example data, start everything
-#   docker compose down            # stop; add -v to also drop the database volume
-#
-# Variables come from a `.env` file next to this file (see .env.example); every one has a default.
-# The browser talks to the API directly, so NEXT_PUBLIC_API_URL / CORS_ORIGIN must match the
-# host ports published below (API_PORT / WEB_PORT).
-
 name: the-stock
 
 services:
@@ -18,9 +9,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-thestock}
     volumes:
       - db-data:/var/lib/postgresql/data
-    # Uncomment to reach the database from the host (e.g. with a SQL client):
-    # ports:
-    #   - "${DB_PORT:-5433}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-thestock} -d ${POSTGRES_DB:-thestock}"]
       interval: 5s
@@ -28,7 +16,6 @@ services:
       retries: 10
     restart: unless-stopped
 
-  # Applies pending Prisma migrations on startup (see backend/Dockerfile), then serves the API.
   api:
     build:
       context: ./backend
@@ -43,8 +30,7 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:${WEB_PORT:-3001}}
       THROTTLE_LIMIT: ${THROTTLE_LIMIT:-300}
       LOGIN_THROTTLE_LIMIT: ${LOGIN_THROTTLE_LIMIT:-10}
-      # Leave NODE_ENV unset over plain HTTP: in production mode the refresh cookie is marked
-      # Secure and browsers only store it over HTTPS (localhost is the exception).
+
     ports:
       - "${API_PORT:-3000}:3000"
     depends_on:

@@ -1,11 +1,4 @@
-# syntax=docker/dockerfile:1.7
-
-# ---------------------------------------------------------------------------
-# builder: installs dependencies and builds the standalone Next.js server.
-# NEXT_PUBLIC_* variables are inlined at build time, so the API URL the
-# browser will call must be known here (see compose.yaml build args).
-# ---------------------------------------------------------------------------
-FROM node:24-bookworm-slim AS builder
+FROM node:24-slim AS builder
 WORKDIR /app
 
 ARG NEXT_PUBLIC_API_URL=http://localhost:3000
@@ -18,9 +11,6 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# ---------------------------------------------------------------------------
-# runtime: only the standalone output (server + traced node_modules) and assets.
-# ---------------------------------------------------------------------------
 FROM node:24-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
