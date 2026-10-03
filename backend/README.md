@@ -71,20 +71,6 @@ Por fim, empacotei a API com **Docker**: uma imagem em dois estágios que aplica
 
 ## 🚦 Running the Project
 
-### Com Docker (stack completa)
-
-Na raiz do repositório:
-
-```bash
-docker compose up -d --build
-```
-
-Isso sobe o PostgreSQL, a API em <http://localhost:3000> e o app web em <http://localhost:3001>. Também aplica as migrações e, com o banco vazio, cria dados de exemplo (3 produtos, 2 entradas de estoque e 3 vendas).
-
-Entre com `admin` / `admin123`. O sistema vai pedir uma nova senha.
-
-Para mudar portas ou segredos, copie o `.env.example` para `.env` na raiz do repositório. Todas as variáveis têm valor padrão.
-
 ### Localmente
 
 Requisitos: **Node.js 24** e **PostgreSQL 15+**.
@@ -97,6 +83,8 @@ npx prisma migrate deploy     # cria as tabelas
 npm run db:seed               # opcional: dados de exemplo (só com o banco vazio)
 npm run start:dev             # http://localhost:3000
 ```
+
+No primeiro boot a API cria o admin `admin` / `admin123`. O primeiro login pede uma nova senha.
 
 | Variável | Descrição |
 |---|---|

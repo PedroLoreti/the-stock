@@ -40,18 +40,6 @@ Com tudo funcionando, apliquei o design visual: fonte DM Sans, o verde da marca 
 
 ## 🚦 Running the Project
 
-### Com Docker (stack completa)
-
-Na raiz do repositório:
-
-```bash
-docker compose up -d --build
-```
-
-Abra <http://localhost:3001> e entre com `admin` / `admin123`. O sistema vai pedir uma nova senha.
-
-O `NEXT_PUBLIC_API_URL` é embutido no build. Se mudar a porta da API (`API_PORT` no `.env` da raiz), reconstrua a imagem `web`.
-
 ### Localmente
 
 Requisitos: **Node.js 24** e a [API](../backend) rodando em <http://localhost:3000> com `CORS_ORIGIN=http://localhost:3001`.
@@ -62,6 +50,8 @@ npm install
 cp .env.example .env.local    # NEXT_PUBLIC_API_URL=http://localhost:3000
 npm run dev                   # http://localhost:3001
 ```
+
+Abra <http://localhost:3001> e entre com `admin` / `admin123`. O sistema vai pedir uma nova senha.
 
 | Script | Descrição |
 |---|---|
